@@ -1,0 +1,33 @@
+---
+title: "STEM Data Analysis"
+output: html_notebook
+---
+
+```{r}
+stem_org = read.csv("stem.csv")
+
+# subset out original dataset
+stem = stem_org[1:866,]
+```
+
+```{r}
+# ordinal pooling, questions Q3.1 to Q3.24
+barplot(table(stem$Q3.1))
+table(stem$Q3.2)
+
+reordered = as.data.frame(sapply(stem, function(x) as.integer(factor(as.character(x), levels=c("Strongly Disagree","Disagree","Not Sure", "Agree", "Strongly Agree")))))
+
+stem[24:47] = reordered[24:47]
+```
+
+```{r}
+# make a copy incase we need original rows for later analysis
+stem_ordinal = stem[24:47]
+stem_ordinal = na.omit(stem_ordinal)
+
+barplot(table(stem_ordinal$Q3.1))
+barplot(table(stem_ordinal$Q3.2))
+barplot(table(stem_ordinal$Q3.3))
+barplot(table(stem_ordinal$Q3.4))
+```
+
