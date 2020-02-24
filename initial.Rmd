@@ -478,7 +478,7 @@ stem2_filtered = stem2[rownames(stem2) %in% rownames(stem_ordinal),]
 stem2_filtered[24:47] = stem_ordinal
 
 # save csv, use for factor analysis + other analysis
-pooled_stem = write.csv(stem2_filtered, "pooled_stem.csv")
+write.csv(stem2_filtered, "pooled_stem.csv")
 ```
 
 
