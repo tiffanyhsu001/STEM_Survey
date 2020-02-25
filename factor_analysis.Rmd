@@ -1,0 +1,67 @@
+---
+title: "Factor Analysis"
+output: html_notebook
+---
+
+```{r}
+stem = read.csv("pooled_stem.csv")
+head(stem)
+```
+
+```{r}
+install.packages('psych')
+install.packages('GPArotation')
+install.packages('psychTools')
+
+library(psych)
+library(GPArotation)
+library(psychTools)
+```
+
+```{r}
+# EDA, Correlations
+stem_ordinal = stem[24:47]
+lowerCor(stem_ordinal)
+corPlot(stem_ordinal)
+
+# pick number of factors 
+# The blue line shows eigenvalues of actual data and the two red lines (placed on top of each other) show simulated and resampled data. Here we look at the large drops in the actual data and spot the point where it levels off to the right. Also we locate the point of inflection – the point where the gap between simulated data and actual data tends to be minimum.
+fa.parallel(stem_ordinal, fa='fa', fm='ml')
+```
+### Factor Analysis
+```{r}
+# only consider the loadings more than 0.3 and not loading on more than one factor (called double loading). Note that negative values are acceptable here. 
+
+factor_analysis <- function(n, rotate_method) {
+  factor <- fa(stem_ordinal,nfactors = n,rotate = rotate_method,fm="ml")
+  cat(n, "Factors")
+  print(factor$loadings,cutoff = 0.3)
+  
+  return(factor)
+}
+
+#### try 7 factors #####
+factor_analysis(7, "oblimin") 
+# variable Q3.10 has double-loading and Q3.1, 3.2, 3.15 become insignificant. so let's try other factor numbers
+
+# try rotating with promax
+factor_analysis(7, "promax")
+
+
+#### try 6 factors #####
+factor_analysis(6, "oblimin") # Q 3.1, 3.15, 3.17, 3.18 are insignificant
+
+# try rotating with promax
+factor_analysis(6, "promax")
+
+
+#### try 8 factors #####
+factor_analysis(8, "oblimin")
+
+# try rotating with promax
+factor_analysis(8, "promax")
+
+# ask which is better, more insignificant questions or having double loading?!
+# also, is maximum likelihood the right factor extraction technique?
+```
+
