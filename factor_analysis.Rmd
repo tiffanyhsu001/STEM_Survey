@@ -22,7 +22,11 @@ corPlot(stem_ordinal)
 
 # pick number of factors 
 # The blue line shows eigenvalues of actual data and the two red lines (placed on top of each other) show simulated and resampled data. Here we look at the large drops in the actual data and spot the point where it levels off to the right. Also we locate the point of inflection – the point where the gap between simulated data and actual data tends to be minimum.
-fa.parallel(stem_ordinal, fa='fa', fm='ml')
+parallel = fa.parallel(stem_ordinal, fa='fa', fm='ml')
+parallel$fa.values
+
+# eigenvalues over 1 = 2 factors
+# eigenvalues over 0.7 = 3 factors
 ```
 ### Factor Analysis
 ```{r}
@@ -38,12 +42,25 @@ factor_analysis <- function(n, rotate_method) {
 
 
 # factors
+twof = factor_analysis(2, "promax")
 threef = factor_analysis(3, "promax")
-fourf = factor_analysis(4,"promax")
-fivef = factor_analysis(5,"promax")
 
-anova(threef, fourf)
+anova(twof, threef) # significantly different
 ```
+```{r}
+threef
+# checking adequacy
+# rmsr = 0.05
+# rmsea = 0.073 adequate
+# tli = 0.746 not good
+# cfi = 1 - ((threef$STATISTIC - threef$dof)/( threef$null.chisq - threef$null.dof)) = 0.8 not good
+
+# reliability
+alpha(stem_ordinal[,c(15,16,19,20,21,22,23,24)], check.keys=TRUE) # good, over 0.7 & 0.8
+alpha(stem_ordinal[,c(8,9,10,13,18)],check.keys=TRUE) # 0.69 alpha
+alpha(stem_ordinal[,c(4,5,6)]) # 0.68 alpha
+```
+
 
 ```{r}
 ### making new variables 
