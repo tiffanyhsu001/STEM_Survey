@@ -69,5 +69,7 @@ stem$Stress_Factor = stem$Q3.8  + stem$Q3.9 + stem$Q3.10 + sapply(stem$Q3.13,res
 
 stem$SES_Factor = stem$Q3.4 + stem$Q3.5 + stem$Q3.6
 
+# save as csv for further analysis & answer research questions
+write.csv(stem, "stem_newfactors.csv", row.names=FALSE)
 ```
 
