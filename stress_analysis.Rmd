@@ -1,0 +1,167 @@
+---
+title: "Stress Analysis"
+output: html_notebook
+---
+
+```{r}
+stem = read.csv("stem_newfactors.csv", na.strings=c("",NA))
+head(stem)
+```
+
+gender
+orientation
+year
+ethnic
+International
+transfer
+efl
+First gen
+gpa
+Q3.2 (hs prep me for STEM)
+Q3.5 (work to pay for finances)
+Q3.15 (general idea about what to do after grad)
+Q3.14 (seek help when have academic problem)
+Q3.2 (hs prep me for STEM)
+
+### Exploratory Analysis
+```{r}
+# gender
+barplot(tapply(stem$Stress_Factor, stem$Gender, mean), main="Gender vs. Average Stress Level")
+
+# orientation
+barplot(tapply(stem$Stress_Factor, stem$Orientation, mean), main="Sexual Orientation vs. Average Stress Level")
+
+# year
+# refactor order
+stem$Year <- factor(stem$Year, levels = c("Freshman", "Sophomore", "Junior", "Senior", "Fifth Year", "Graduate Student"))
+barplot(tapply(stem$Stress_Factor, stem$Year, mean), main="Year vs. Average Stress Level")
+
+# ethnic, work on this in a bit
+levels(stem$Ethnic)
+barplot(tapply(stem$Stress_Factor, stem$Ethnic, mean), main="Year vs. Average Stress Level")
+
+# international
+barplot(tapply(stem$Stress_Factor, stem$International, mean,na.rm=TRUE), main="International vs. Average Stress Level")
+
+# transfer
+barplot(tapply(stem$Stress_Factor, stem$Transfer, mean,na.rm=TRUE), main="Transfer vs. Average Stress Level")
+
+# efl
+barplot(tapply(stem$Stress_Factor, stem$EFL, mean), main="EFL vs. Average Stress Level")
+
+# first gen
+barplot(tapply(stem$Stress_Factor, stem$FirstGen, mean,na.rm=TRUE), main="First Gen vs. Average Stress Level")
+
+# gpa
+stem$GPA[stem$GPA == 0] <- NA
+range(stem$GPA,na.rm=TRUE)
+
+stem$GPA[stem$GPA < 1.0] = 0
+stem$GPA[stem$GPA >= 1.0 & stem$GPA < 2.0] = 1
+stem$GPA[stem$GPA >= 2.0 & stem$GPA < 3.0] = 2
+stem$GPA[stem$GPA >= 3.0 & stem$GPA < 4.0] = 3
+stem$GPA[stem$GPA >= 4.0] = 4
+
+barplot(tapply(stem$Stress_Factor, stem$GPA, mean,na.rm=TRUE), main="GPA vs. Average Stress Level")
+```
+
+```{r}
+# q3.2, .5, .15, ethnic, year, gender
+# how correlated are these variables with the stress_factor variable
+
+stem$GPA[stem$GPA == 0] = mean(stem$GPA) 
+target = stem[,'Stress_Factor']
+
+
+q2 = stem[,'Q3.2']
+q5 = stem[,'Q3.5']
+q15 = stem[,'Q3.15']
+q14 = stem[,'Q3.14']
+ses = stem[,'SES_Factor']
+
+
+
+cor(q2, target)
+res <- cor.test(q2, target, 
+                    method = "pearson")
+res$p.value
+barplot(tapply(target, q2, mean), main = 'Q3.2 versus Stress Level', ylab = 'Stress Level', xlab = 'Level of preparedness from hs for STEM', ylim = c(10, 13)) 
+
+cor(q5, target)
+res <- cor.test(q5, target, 
+                    method = "pearson")
+res$p.value
+barplot(tapply(target, q5, mean), main = 'Q3.5 versus Stress Level', ylab = 'Stress Level', xlab = 'Level of work needed to pay for expenses', ylim = c(8, 12)) 
+
+cor(q15, target)
+res <- cor.test(q15, target, 
+                    method = "pearson")
+res$p.value
+barplot(tapply(target, q15, mean), main = 'Q3.15 versus Stress Level', ylab = 'Stress Level', xlab = 'To what extent do you know what you want to do after graduation', ylim = c(10, 11.5)) 
+
+cor(q14, target)
+res <- cor.test(q14, target, 
+                    method = "pearson")
+res$p.value
+barplot(tapply(target, q14, mean), main = 'Q3.14 versus Stress Level', ylab = 'Stress Level', xlab = 'To what extent do you seek help when you have an academic problem', ylim = c(9, 12))
+
+cor(ses, target)
+res <- cor.test(ses, target, 
+                    method = "pearson")
+res$p.value
+barplot(tapply(target, ses, mean), main = 'SES versus Stress Level', ylab = 'Stress Level', xlab = 'SES', ylim = c(8,12))
+
+```
+
+
+```{r}
+# ANOVA
+gender <- aov(Stress_Factor~Gender, data = stem)
+summary(gender) # significantly different
+
+orientation <- aov(Stress_Factor~Orientation, data = stem)
+summary(orientation) # not significantly different
+
+year <- aov(Stress_Factor~Year, data = stem)
+summary(year) # not significantly different
+
+international <- aov(Stress_Factor~International, data = stem)
+summary(international) # significantly different
+
+transfer <- aov(Stress_Factor~Transfer, data = stem)
+summary(transfer) # not significantly different
+
+efl <- aov(Stress_Factor~EFL, data = stem)
+summary(efl) # not significantly different
+
+firstgen <- aov(Stress_Factor~FirstGen, data = stem)
+summary(firstgen) # significantly different
+
+# simple linear reg
+gpa_lm <- lm(Stress_Factor ~ GPA, data = stem)
+summary(gpa_lm) # gpa is significant 
+
+# we will use gender, firstgen, and gpa in our linear reg, Q3.2, Q3.5, Q3.14
+```
+
+```{r}
+# linear regression
+model = lm(Stress_Factor ~ Gender+ FirstGen +GPA+ Q3.2 + Q3.5 + Q3.14, data = stem)
+summary(model)
+
+plot(model)
+```
+https://www.theanalysisfactor.com/interpreting-regression-coefficients/
+
+Only GenderMale, GPA, Q3.2, Q3.5, and Q3.14 were significant with Stress Factor.
+
+With 1 unit increase in GPA, (and everything else held constant), Stress factors will decrease by 0.8577 units, on average.
+
+With 1 unit increase in Q3.2 (high school preparedness for STEM), (and everything else held constant), Stress factors will decrease by 0.4206 units, on average.
+
+With 1 unit increase in Q3.5 (needing to work for expenses), (and everything else held constant), Stress factors will incease by 0.3157 units, on average.
+
+With 1 unit increase in Q3.14 (seek help with academic problems), (and everything else held constant), Stress factors will decrease by 0.3212 units, on average.
+
+analyze the categorical one, ask about the graph stuff
+
