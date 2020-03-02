@@ -1,0 +1,207 @@
+---
+title: "Exploratory Analsyis: Belonging_Factor"
+output: pdf_document
+---
+
+```{r}
+stem <- read.csv("~/Downloads/STEM_Survey-master/stem_newfactors.csv", na.strings=c("",NA))
+head(stem)
+stem <- stem[-236,] # after removing unrealistic value (9999999999999999583119736832) for stem$SameEthnic
+```
+ 
+```{r}
+# Gender
+barplot(tapply(stem$Belonging_Factor, stem$Gender, mean), main="Gender vs. Average Level of Sense of Belonging")
+
+# Orientation
+barplot(tapply(stem$Belonging_Factor, stem$Orientation, mean), main="Sexual Orientation vs. Average Level of Sense of Belonging")
+
+# Year
+stem$Year <- factor(stem$Year, levels = c("Freshman", "Sophomore", "Junior", "Senior", "Fifth Year", "Graduate Student"))
+barplot(tapply(stem$Belonging_Factor, stem$Year, mean), main="Year vs. Average Level of Sense of Belonging")
+
+# Ethnic
+barplot(tapply(stem$Belonging_Factor, stem$Ethnic, mean), main="Year vs. Average Level of Sense of Belonging")
+
+# International
+barplot(tapply(stem$Belonging_Factor, stem$International, mean,na.rm=TRUE), main="International vs. Average Level of Sense of Belonging")
+
+# Transfer
+barplot(tapply(stem$Belonging_Factor, stem$Transfer, mean,na.rm=TRUE), main="Transfer vs. Average Level of Sense of Belonging")
+
+#efl
+
+barplot(tapply(stem$Belonging_Factor, stem$EFL, mean), main="EFL vs. Average Level of Sense of Belonging")
+
+# FirstGen
+
+barplot(tapply(stem$Belonging_Factor, stem$FirstGen, mean), main="FirstGen vs. Average Level of Sense of Belonging")
+
+# STEM
+
+barplot(tapply(stem$Belonging_Factor, stem$STEM, mean), main="STEM vs. Average Level of Sense of Belonging")
+
+# GPA
+
+stem$GPA[stem$GPA == 0] <- NA
+range(stem$GPA,na.rm=TRUE)
+stem$GPA[stem$GPA < 1.0] = 0
+stem$GPA[stem$GPA >= 1.0 & stem$GPA < 2.0] = 1
+stem$GPA[stem$GPA >= 2.0 & stem$GPA < 3.0] = 2
+stem$GPA[stem$GPA >= 3.0 & stem$GPA < 4.0] = 3
+stem$GPA[stem$GPA >= 4.0] = 4
+
+barplot(tapply(stem$Belonging_Factor, stem$GPA, mean,na.rm=TRUE), main="GPA vs. Average Level of Sense of Belonging")
+
+# SameEthnic
+
+dummy <- stem$SameEthnic
+dummy[is.na(dummy)] <- 0.0
+range(dummy)
+
+dummy[dummy >= 0.0 & dummy < 10.0] = 1 # 0-10
+dummy[dummy >= 10.0 & dummy < 20.0] = 2 # 10-20
+dummy[dummy >= 20.0 & dummy < 40.0] = 3 # 20-40
+dummy[dummy >= 40.0 & dummy < 70.0] = 4 # 40-70
+dummy[dummy >= 70.0 & dummy < 100.0] =5 # 70-100
+dummy[dummy >= 100.0] = 6 # 100+
+
+barplot(tapply(stem$Belonging_Factor, dummy, mean,na.rm=TRUE), main="SameEthnic vs. Average Level of Sense of Belonging")
+
+# OtherEthnic
+
+dummy1 <- stem$OtherEthnic
+dummy1[is.na(dummy1)] <- 0.0
+range(dummy1)
+
+dummy1[dummy1 >= 0.0 & dummy1 < 10.0] = 1 # 0-10
+dummy1[dummy1 >= 10.0 & dummy1 < 20.0] = 2 # 10-20
+dummy1[dummy1 >= 20.0 & dummy1 < 40.0] = 3 # 20-40
+dummy1[dummy1 >= 40.0 & dummy1 < 70.0] = 4 # 40-70
+dummy1[dummy1 >= 70.0 & dummy1 < 100.0] =5 # 70-100
+dummy1[dummy1 >= 100.0] = 6 # 100+
+
+barplot(tapply(stem$Belonging_Factor, dummy1, mean,na.rm=TRUE), main="OtherEthnic vs. Average Level of Sense of Belonging")
+```
+
+```{r}
+target = stem[,'Belonging_Factor']
+
+# how correlated are these variables with the belonging_factor variable
+
+q7 = stem[,'Q3.7']
+q9 = stem[,'Q3.9']
+q14 = stem[,'Q3.14']
+
+cor(q7, target)
+res <- cor.test(q7, target, method = "pearson")
+res$p.value
+barplot(tapply(target, q7, mean), main = 'Q3.7 versus Sense of Belonging Level', ylab = 'Sense of Belonging Level', xlab = 'Friends in my Major') 
+
+# not using q7 for linear model
+
+cor(q9, target)
+res <- cor.test(q9, target, method = "pearson")
+res$p.value
+barplot(tapply(target, q9, mean), main = 'Q3.9 versus Sense of Belonging Level', ylab = 'Sense of Belonging Level', xlab = 'Level of Work from Major and Social Life Balance') 
+
+# using q9 for linear model
+
+cor(q14, target)
+res <- cor.test(q14, target,method = "pearson")
+res$p.value
+barplot(tapply(target, q14, mean), main = 'Q3.14 versus Sense of Belonging Level', ylab = 'Sense of Belonging Level', xlab = 'To what extent do you seek help when you have an academic problem')
+
+# using q14 for linear model
+
+q4 = stem[,'Q3.4']
+q5 = stem[,'Q3.5']
+q17 = stem[,'Q3.17']
+q18 = stem[,'Q3.18']
+
+cor(q4, target)
+res <- cor.test(q4, target, method = "pearson")
+res$p.value
+barplot(tapply(target, q4, mean), main = 'Q3.4 versus Sense of Belonging Level', ylab = 'Sense of Belonging Level', xlab = 'Family SES struggles') 
+
+# using q4 for linear model
+
+cor(q5, target)
+res <- cor.test(q5, target, method = "pearson")
+res$p.value
+barplot(tapply(target, q5, mean), main = 'Q3.5 versus Sense of Belonging Level', ylab = 'Sense of Belonging Level', xlab = 'Need to work for Expenses') 
+
+# using q5 for linear model
+
+cor(q17, target)
+res <- cor.test(q17, target, method = "pearson")
+res$p.value
+barplot(tapply(target, q17, mean), main = 'Q3.17 versus Sense of Belonging Level', ylab = 'Sense of Belonging Level', xlab = 'Not enough students like me in major') 
+
+# using q17 for linear model
+
+cor(q18, target)
+res <- cor.test(q18, target,method = "pearson")
+res$p.value
+barplot(tapply(target, q18, mean), main = 'Q3.18 versus Sense of Belonging Level', ylab = 'Sense of Belonging Level', xlab = 'Not enough faculty like me in major')
+
+# using q18 for linear model
+
+ses = stem[,'SES_Factor']
+cor(ses, target)
+res <- cor.test(ses, target, 
+                    method = "pearson")
+res$p.value
+barplot(tapply(target, ses, mean), main = 'SES versus Sense of Belonging Level', ylab = 'Sense of Belonging Level', xlab = 'SES')
+```
+
+# Anova
+
+```{r}
+gender <- aov(Belonging_Factor~Gender, data = stem)
+summary(gender) # not significantly different
+
+orientation <- aov(Belonging_Factor~Orientation, data = stem)
+summary(orientation) # not significantly different
+
+year <- aov(Belonging_Factor~Year, data = stem)
+summary(year) # significantly different
+
+ethnic <- aov(Belonging_Factor~Ethnic, data = stem)
+summary(ethnic) # significantly different
+
+international <- aov(Belonging_Factor~International, data = stem)
+summary(international) # significantly different
+
+transfer <- aov(Belonging_Factor~Transfer, data = stem)
+summary(transfer) # significantly different
+
+efl <- aov(Belonging_Factor~EFL, data = stem)
+summary(efl) # significantly different
+
+firstgen <- aov(Belonging_Factor~FirstGen, data = stem)
+summary(firstgen) # significantly different
+
+stem_field <- aov(Belonging_Factor~STEM, data = stem)
+summary(stem_field) # not significantly different
+
+sameethnic <- aov(Belonging_Factor~SameEthnic, data = stem)
+summary(sameethnic) # not significantly different
+
+otherethnic <- aov(Belonging_Factor~OtherEthnic, data = stem)
+summary(otherethnic) # significantly different
+
+gpa_lm <- lm(Belonging_Factor ~ GPA, data = stem)
+summary(gpa_lm) # gpa is significant
+
+# using year, ethnic, international, transfer, efl, firstgen, otherethnic and gpa for linear model
+```
+
+# linear model
+
+```{r}
+m2 = lm(target~q4+q5+q9+q14+q17+q18+stem$Year+stem$Ethnic+stem$International+stem$Transfer+stem$EFL+stem$FirstGen+stem$GPA+stem$OtherEthnic)
+summary(m2)
+plot(m2)
+```
+
