@@ -200,7 +200,7 @@ summary(gpa_lm) # gpa is significant
 # linear model
 
 ```{r}
-m2 = lm(target~q4+q5+q9+q14+q17+q18+stem$Year+stem$Ethnic+stem$International+stem$Transfer+stem$EFL+stem$FirstGen+stem$GPA+stem$OtherEthnic)
+m2 = glm(target~q4+q5+q9+q14+q17+q18+stem$Year+stem$Ethnic+stem$International+stem$Transfer+stem$EFL+stem$FirstGen+stem$GPA+stem$OtherEthnic)
 summary(m2)
 plot(m2)
 ```
