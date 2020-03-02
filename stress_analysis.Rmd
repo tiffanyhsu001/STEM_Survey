@@ -8,23 +8,17 @@ stem = read.csv("stem_newfactors.csv", na.strings=c("",NA))
 head(stem)
 ```
 
-gender
-orientation
-year
-ethnic
-International
-transfer
-efl
-First gen
-gpa
-Q3.2 (hs prep me for STEM)
-Q3.5 (work to pay for finances)
-Q3.15 (general idea about what to do after grad)
-Q3.14 (seek help when have academic problem)
-Q3.2 (hs prep me for STEM)
-
 ### Exploratory Analysis
 ```{r}
+library(gdata)
+
+# clean data
+stem$Gender[stem$Gender == 'Genderfluid' |  stem$Gender == 'Transgender female'] <- NA
+stem = stem[!is.na(stem$Gender),]
+stem$Orientation[stem$Orientation == 'straight'] <- 'Heterosexual'
+stem = drop.levels(stem)
+
+
 # gender
 barplot(tapply(stem$Stress_Factor, stem$Gender, mean), main="Gender vs. Average Stress Level")
 
@@ -36,9 +30,6 @@ barplot(tapply(stem$Stress_Factor, stem$Orientation, mean), main="Sexual Orienta
 stem$Year <- factor(stem$Year, levels = c("Freshman", "Sophomore", "Junior", "Senior", "Fifth Year", "Graduate Student"))
 barplot(tapply(stem$Stress_Factor, stem$Year, mean), main="Year vs. Average Stress Level")
 
-# ethnic, work on this in a bit
-levels(stem$Ethnic)
-barplot(tapply(stem$Stress_Factor, stem$Ethnic, mean), main="Year vs. Average Stress Level")
 
 # international
 barplot(tapply(stem$Stress_Factor, stem$International, mean,na.rm=TRUE), main="International vs. Average Stress Level")
@@ -54,13 +45,13 @@ barplot(tapply(stem$Stress_Factor, stem$FirstGen, mean,na.rm=TRUE), main="First 
 
 # gpa
 stem$GPA[stem$GPA == 0] <- NA
-range(stem$GPA,na.rm=TRUE)
+#range(stem$GPA,na.rm=TRUE)
 
-stem$GPA[stem$GPA < 1.0] = 0
-stem$GPA[stem$GPA >= 1.0 & stem$GPA < 2.0] = 1
-stem$GPA[stem$GPA >= 2.0 & stem$GPA < 3.0] = 2
-stem$GPA[stem$GPA >= 3.0 & stem$GPA < 4.0] = 3
-stem$GPA[stem$GPA >= 4.0] = 4
+stem$GPA[stem$GPA < 3.0] = "< 3.0"
+stem$GPA[stem$GPA >= 3.0 & stem$GPA <= 3.5] = "3.0 <= x <= 3.5"
+stem$GPA[stem$GPA > 3.5] = ">3.5"
+
+stem$GPA <- factor(stem$GPA, levels = c("< 3.0", "3.0 <= x <= 3.5", ">3.5"))
 
 barplot(tapply(stem$Stress_Factor, stem$GPA, mean,na.rm=TRUE), main="GPA vs. Average Stress Level")
 ```
@@ -78,7 +69,6 @@ q5 = stem[,'Q3.5']
 q15 = stem[,'Q3.15']
 q14 = stem[,'Q3.14']
 ses = stem[,'SES_Factor']
-
 
 
 cor(q2, target)
@@ -144,24 +134,49 @@ summary(gpa_lm) # gpa is significant
 # we will use gender, firstgen, and gpa in our linear reg, Q3.2, Q3.5, Q3.14
 ```
 
+## Modeling
+We have broken up our final variables into 3 separate subcategories, or blocks.
+
+Block1: SES - Q3.2, Q3.5
+
+Block2: Demographics - Gender, FirstGen
+
+Block3: Academic Awareness/Direction: Q3.14, GPA
 ```{r}
-# linear regression
-model = lm(Stress_Factor ~ Gender+ FirstGen +GPA+ Q3.2 + Q3.5 + Q3.14, data = stem)
-summary(model)
+# block1
+m1 = lm(Stress_Factor ~ as.factor(Q3.2) + as.factor(Q3.5), data=stem)
+summary(m1)
+# adj R2 0.1004 
 
-plot(model)
+# block1 + block2
+m2 = lm(Stress_Factor ~ as.factor(Q3.2) + as.factor(Q3.5) + Gender + FirstGen, data=stem)
+summary(m2)
+# adj R2 0.131 
+
+# block1 + block2 + block3 
+m3 = lm(Stress_Factor ~ as.factor(Q3.2) + as.factor(Q3.5) + Gender + FirstGen + as.factor(Q3.14) + GPA, data=stem)
+summary(m3)
+# adj R2 0.1625 
+
+# block1 + block2 + block3 + interaction
+m4 = lm(Stress_Factor ~ as.factor(Q3.2) + as.factor(Q3.5) + Gender + FirstGen + as.factor(Q3.14) + GPA + as.factor(Q3.2) * GPA, data=stem)
+summary(m4)
+# adj R2 0.1726 
 ```
-https://www.theanalysisfactor.com/interpreting-regression-coefficients/
+Adding each block to the model increases adj R2 each time. After adding all the blocks and interaction terms, we get a final adjusted R2 of 0.1726. By looking at the output of each individual submodel, we can see the effects of each block on Stress overall. 
 
-Only GenderMale, GPA, Q3.2, Q3.5, and Q3.14 were significant with Stress Factor.
+## Plots
+```{r}
+stem$Q3.2 = as.factor(stem$Q3.2)
 
-With 1 unit increase in GPA, (and everything else held constant), Stress factors will decrease by 0.8577 units, on average.
+interaction.plot(stem$GPA, stem$Q3.2, stem$Stress_Factor,xlab="GPA", ylab="Stress_Factor", trace.label="HS Prep STEM")
+```
 
-With 1 unit increase in Q3.2 (high school preparedness for STEM), (and everything else held constant), Stress factors will decrease by 0.4206 units, on average.
+For students who strongly felt their HS prepped them well for STEM (level=4), their stress levels decreased drastically as GPA increases.
+Overall students who strongly felt their HS did NOT prep for STEM (level=1) had the highest overall stress, across all GPAs, and their stress levels only slightly decrease with higher GPA. 
+For students who felt their HS slightly prepared them for STEM (level=2), had high stress at low GPAs and dropped drastically as GPA increased. 
+For students who felt their HS prepared them for STEM (level=3) had the overall lowest stress throughout all GPAs, and stress levels remained the same no matter what GPA the students had.
 
-With 1 unit increase in Q3.5 (needing to work for expenses), (and everything else held constant), Stress factors will incease by 0.3157 units, on average.
 
-With 1 unit increase in Q3.14 (seek help with academic problems), (and everything else held constant), Stress factors will decrease by 0.3212 units, on average.
 
-analyze the categorical one, ask about the graph stuff
 
