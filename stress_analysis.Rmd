@@ -83,12 +83,6 @@ res <- cor.test(q5, target,
 res$p.value
 barplot(tapply(target, q5, mean), main = 'Q3.5 versus Stress Level', ylab = 'Stress Level', xlab = 'Level of work needed to pay for expenses', ylim = c(8, 12)) 
 
-cor(q15, target)
-res <- cor.test(q15, target, 
-                    method = "pearson")
-res$p.value
-barplot(tapply(target, q15, mean), main = 'Q3.15 versus Stress Level', ylab = 'Stress Level', xlab = 'To what extent do you know what you want to do after graduation', ylim = c(10, 11.5)) 
-
 cor(q14, target)
 res <- cor.test(q14, target, 
                     method = "pearson")
@@ -101,6 +95,61 @@ res <- cor.test(ses, target,
 res$p.value
 barplot(tapply(target, ses, mean), main = 'SES versus Stress Level', ylab = 'Stress Level', xlab = 'SES', ylim = c(8,12))
 
+```
+
+```{r}
+# exploratory analysis: belonging questions (taken from factor analysis) 3.15 (checked above), 3.16, 3.19 - 3.24 summed
+q15 = stem[,'Q3.15']
+q16 = stem[,'Q3.16']
+q19 = stem[,'Q3.19']
+q20 = stem[,'Q3.20']
+q21 = stem[,'Q3.21']
+q22 = stem[,'Q3.22']
+q23 = stem[,'Q3.23']
+q24 = stem[,'Q3.24']
+
+cor(q15, target)
+res <- cor.test(q15, target, 
+                    method = "pearson")
+res$p.value # not significant
+barplot(tapply(target, q15, mean), main = 'Q3.15 versus Stress Level', ylab = 'Stress Level', xlab = 'To what extent do you know what you want to do after graduation') 
+
+cor(q16, target)
+res <- cor.test(q16, target, method = "pearson") 
+res$p.value # significant
+barplot(tapply(target, q16, mean), main = 'Q3.16 versus Stress Level', ylab = 'Stress Level', xlab = 'Q3.16')
+
+cor(q19, target)
+res <- cor.test(q19, target, method = "pearson") 
+res$p.value # significant
+barplot(tapply(target, q19, mean), main = 'Q3.19 versus Stress Level', ylab = 'Stress Level', xlab = 'Q3.19')
+
+cor(q20, target)
+res <- cor.test(q20, target, method = "pearson") 
+res$p.value # not significant
+barplot(tapply(target, q20, mean), main = 'Q3.20 versus Stress Level', ylab = 'Stress Level', xlab = 'Q3.20')
+
+cor(q21, target)
+res <- cor.test(q21, target, method = "pearson") 
+res$p.value # significant
+barplot(tapply(target, q21, mean), main = 'Q3.21 versus Stress Level', ylab = 'Stress Level', xlab = 'Q3.21')
+
+cor(q22, target)
+res <- cor.test(q22, target, method = "pearson") 
+res$p.value # significant
+barplot(tapply(target, q22, mean), main = 'Q3.22 versus Stress Level', ylab = 'Stress Level', xlab = 'Q3.22')
+
+cor(q23, target)
+res <- cor.test(q23, target, method = "pearson") 
+res$p.value # significant
+barplot(tapply(target, q23, mean), main = 'Q3.23 versus Stress Level', ylab = 'Stress Level', xlab = 'Q3.23')
+
+cor(q24, target)
+res <- cor.test(q24, target, method = "pearson") 
+res$p.value # significant
+barplot(tapply(target, q24, mean), main = 'Q3.24 versus Stress Level', ylab = 'Stress Level', xlab = 'Q3.24')
+
+# Q3.16, 3.19, 3.21-3.24 all significant
 ```
 
 
@@ -135,35 +184,69 @@ summary(gpa_lm) # gpa is significant
 ```
 
 ## Modeling
-We have broken up our final variables into 3 separate subcategories, or blocks.
+We have broken up our final variables into 3 separate subcategories, or blocks. We should check each block individually and see which is most important.
 
 Block1: SES - Q3.2, Q3.5
 
 Block2: Demographics - Gender, FirstGen
 
 Block3: Academic Awareness/Direction: Q3.14, GPA
+
+Block4: Belonging Q3.16, 3.19, 3.21-3.24
 ```{r}
 # block1
-m1 = lm(Stress_Factor ~ as.factor(Q3.2) + as.factor(Q3.5), data=stem)
-summary(m1)
+ses = lm(Stress_Factor ~ as.factor(Q3.2) + as.factor(Q3.5), data=stem)
+summary(ses)
 # adj R2 0.1004 
 
-# block1 + block2
-m2 = lm(Stress_Factor ~ as.factor(Q3.2) + as.factor(Q3.5) + Gender + FirstGen, data=stem)
+# block 2 
+dem = lm(Stress_Factor ~ Gender + FirstGen, data=stem)
+summary(dem)
+# adj R2 0.06056
+
+# block 3 
+aca = lm(Stress_Factor ~ as.factor(Q3.14) + GPA, data=stem)
+summary(aca)
+# adj R2 0.06923
+
+# block 4 
+bel = lm(Stress_Factor ~ as.factor(Q3.16) + as.factor(Q3.19) + as.factor(Q3.21) + as.factor(Q3.22) + as.factor(Q3.23)+ as.factor(Q3.24), data=stem)
+summary(bel)
+# adj R2 0.2304. use this as base 
+
+
+# block4 + block1
+m1 = lm(Stress_Factor ~ as.factor(Q3.16) + as.factor(Q3.19) + as.factor(Q3.21) + as.factor(Q3.22) + as.factor(Q3.23)+ as.factor(Q3.24) + as.factor(Q3.2) + as.factor(Q3.5), data=stem)
+summary(m1)
+# adj R2 0.2634
+
+# block4 + block2
+m2 = lm(Stress_Factor ~ as.factor(Q3.16) + as.factor(Q3.19) + as.factor(Q3.21) + as.factor(Q3.22) + as.factor(Q3.23)+ as.factor(Q3.24) + Gender + FirstGen, data=stem)
 summary(m2)
-# adj R2 0.131 
+# adj R2 0.2552
 
-# block1 + block2 + block3 
-m3 = lm(Stress_Factor ~ as.factor(Q3.2) + as.factor(Q3.5) + Gender + FirstGen + as.factor(Q3.14) + GPA, data=stem)
+
+# block4 + block3
+m3 = lm(Stress_Factor ~ as.factor(Q3.16) + as.factor(Q3.19) + as.factor(Q3.21) + as.factor(Q3.22) + as.factor(Q3.23)+ as.factor(Q3.24) + as.factor(Q3.14) + GPA, data=stem)
 summary(m3)
-# adj R2 0.1625 
+# adj R2 0.2649, highest of 2 blocks
 
-# block1 + block2 + block3 + interaction
-m4 = lm(Stress_Factor ~ as.factor(Q3.2) + as.factor(Q3.5) + Gender + FirstGen + as.factor(Q3.14) + GPA + as.factor(Q3.2) * GPA, data=stem)
+# block4 + block3 + block1
+m4 = lm(Stress_Factor ~ as.factor(Q3.16) + as.factor(Q3.19) + as.factor(Q3.21) + as.factor(Q3.22) + as.factor(Q3.23)+ as.factor(Q3.24) + as.factor(Q3.14) + GPA + as.factor(Q3.2) + as.factor(Q3.5), data=stem)
 summary(m4)
-# adj R2 0.1726 
+# adj R2 0.2874
+
+# block4 + block3 + block2
+m5 = lm(Stress_Factor ~ as.factor(Q3.16) + as.factor(Q3.19) + as.factor(Q3.21) + as.factor(Q3.22) + as.factor(Q3.23)+ as.factor(Q3.24) + as.factor(Q3.14) + GPA + Gender + FirstGen, data=stem)
+summary(m5)
+# adj R2 0.2881
+
+# block4 + block3 + block2 + block1
+m6 = lm(Stress_Factor ~ as.factor(Q3.16) + as.factor(Q3.19) + as.factor(Q3.21) + as.factor(Q3.22) + as.factor(Q3.23)+ as.factor(Q3.24) + as.factor(Q3.14) + GPA + Gender + FirstGen + as.factor(Q3.2) + as.factor(Q3.5), data=stem)
+summary(m6)
+# adj R2 0.3026
 ```
-Adding each block to the model increases adj R2 each time. After adding all the blocks and interaction terms, we get a final adjusted R2 of 0.1726. By looking at the output of each individual submodel, we can see the effects of each block on Stress overall. 
+Block4: Belonging had the most influence on increasing R2 for Stress.  
 
 ## Plots
 ```{r}
@@ -176,6 +259,10 @@ For students who strongly felt their HS prepped them well for STEM (level=4), th
 Overall students who strongly felt their HS did NOT prep for STEM (level=1) had the highest overall stress, across all GPAs, and their stress levels only slightly decrease with higher GPA. 
 For students who felt their HS slightly prepared them for STEM (level=2), had high stress at low GPAs and dropped drastically as GPA increased. 
 For students who felt their HS prepared them for STEM (level=3) had the overall lowest stress throughout all GPAs, and stress levels remained the same no matter what GPA the students had.
+
+```{r}
+# t-test between GPA and stess levels (maybe?)
+```
 
 
 
