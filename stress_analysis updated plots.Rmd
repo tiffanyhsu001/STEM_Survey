@@ -11,6 +11,7 @@ head(stem)
 ### Exploratory Analysis
 ```{r}
 library(gdata)
+library(dplyr)
 library(ggplot2)
 
 # clean data
@@ -113,7 +114,8 @@ stem$GPA[stem$GPA > 3.5] = ">3.5"
 
 stem$GPA <- factor(stem$GPA, levels = c("< 3.0", "3.0 <= x <= 3.5", ">3.5"))
 
-ggplot(stem) +
+filter(stem, !is.na(GPA)) %>%
+  ggplot() +
   aes(x=GPA, y=Stress_Factor, color=GPA) + 
   labs(x = "GPA",
        y = "Stress_Factor",
@@ -295,7 +297,4 @@ For students who strongly felt their HS prepped them well for STEM (level=4), th
 Overall students who strongly felt their HS did NOT prep for STEM (level=1) had the highest overall stress, across all GPAs, and their stress levels only slightly decrease with higher GPA. 
 For students who felt their HS slightly prepared them for STEM (level=2), had high stress at low GPAs and dropped drastically as GPA increased. 
 For students who felt their HS prepared them for STEM (level=3) had the overall lowest stress throughout all GPAs, and stress levels remained the same no matter what GPA the students had.
-
-
-
 
