@@ -1,0 +1,303 @@
+---
+title: "Stress Analysis"
+output: html_notebook
+---
+
+```{r}
+stem = read.csv("~/Downloads/STEM_Survey-master/stem_newfactors.csv", na.strings=c("",NA))
+head(stem)
+```
+
+### Exploratory Analysis
+```{r}
+library(gdata)
+library(ggplot2)
+
+# clean data
+stem$Gender[stem$Gender == 'Genderfluid' |  stem$Gender == 'Transgender female'] <- NA
+stem = stem[!is.na(stem$Gender),]
+stem$Orientation[stem$Orientation == 'straight'] <- 'Heterosexual'
+stem = drop.levels(stem)
+
+```
+
+```{r}
+# gender
+
+ggplot(stem) +
+  aes(x=Gender, y=Stress_Factor, color=Gender) + 
+  labs(x = "Gender",
+       y = "Stress_Factor",
+       title = "Gender vs. Average Stress Level") +
+  geom_bar(stat="identity", aes(fill = Gender)) +
+  theme_minimal() +
+  theme(plot.title = element_text(hjust = 0.5))
+```
+       
+```{r}
+# orientation
+
+ggplot(stem) +
+  aes(x=Orientation, y=Stress_Factor, color=Orientation) + 
+  labs(x = "Sexual Orientation",
+       y = "Stress_Factor",
+       title = "Sexual Orientation vs. Average Stress Level") +
+  geom_bar(stat="identity", aes(fill = Orientation)) +
+  theme_minimal() +
+  theme(plot.title = element_text(hjust = 0.5))
+
+# year
+# refactor order
+stem$Year <- factor(stem$Year, levels = c("Freshman", "Sophomore", "Junior", "Senior", "Fifth Year", "Graduate Student"))
+
+ggplot(stem) +
+  aes(x=Year, y=Stress_Factor, color=Year) + 
+  labs(x = "Year in College",
+       y = "Stress_Factor",
+       title = "Year in College vs. Average Stress Level") +
+  geom_bar(stat="identity", aes(fill = Year)) +
+  theme_minimal() +
+  theme(plot.title = element_text(hjust = 0.5))
+
+# international
+
+ggplot(stem) +
+  aes(x=International, y=Stress_Factor, color=International) + 
+  labs(x = "International Student?",
+       y = "Stress_Factor",
+       title = "International vs. Average Stress Level") +
+  geom_bar(stat="identity", aes(fill = International)) +
+  theme_minimal() +
+  theme(plot.title = element_text(hjust = 0.5))
+
+# transfer
+
+ggplot(stem) +
+  aes(x=Transfer, y=Stress_Factor, color=Transfer) + 
+  labs(x = "Transfer Student?",
+       y = "Stress_Factor",
+       title = "Transfer vs. Average Stress Level") +
+  geom_bar(stat="identity", aes(fill = Transfer)) +
+  theme_minimal() +
+  theme(plot.title = element_text(hjust = 0.5))
+
+# efl
+
+ggplot(stem) +
+  aes(x=EFL, y=Stress_Factor, color=EFL) + 
+  labs(x = "EFL?",
+       y = "Stress_Factor",
+       title = "EFL vs. Average Stress Level") +
+  geom_bar(stat="identity", aes(fill = EFL)) +
+  theme_minimal() +
+  theme(plot.title = element_text(hjust = 0.5))
+
+# first gen
+
+ggplot(stem) +
+  aes(x=FirstGen, y=Stress_Factor, color=FirstGen) + 
+  labs(x = "First Generation?",
+       y = "Stress_Factor",
+       title = "First Gen vs. Average Stress Level") +
+  geom_bar(stat="identity", aes(fill = FirstGen)) +
+  theme_minimal() +
+  theme(plot.title = element_text(hjust = 0.5))
+
+# gpa
+stem$GPA[stem$GPA == 0] <- NA
+#range(stem$GPA,na.rm=TRUE)
+
+stem$GPA[stem$GPA < 3.0] = "< 3.0"
+stem$GPA[stem$GPA >= 3.0 & stem$GPA <= 3.5] = "3.0 <= x <= 3.5"
+stem$GPA[stem$GPA > 3.5] = ">3.5"
+
+stem$GPA <- factor(stem$GPA, levels = c("< 3.0", "3.0 <= x <= 3.5", ">3.5"))
+
+barplot(tapply(stem$Stress_Factor, stem$GPA, mean,na.rm=TRUE), main="GPA vs. Average Stress Level")
+
+ggplot(stem) +
+  aes(x=GPA, y=Stress_Factor, color=GPA) + 
+  labs(x = "GPA",
+       y = "Stress_Factor",
+       title = "GPA vs. Average Stress Level") +
+  geom_bar(stat="identity", aes(fill = GPA)) +
+  theme_minimal() +
+  theme(plot.title = element_text(hjust = 0.5))
+
+```
+
+```{r}
+# q3.2, .5, .15, ethnic, year, gender
+# how correlated are these variables with the stress_factor variable
+
+stem$GPA[stem$GPA == 0] = mean(stem$GPA) 
+target = stem[,'Stress_Factor']
+
+q2 = stem[,'Q3.2']
+q5 = stem[,'Q3.5']
+q15 = stem[,'Q3.15']
+q14 = stem[,'Q3.14']
+ses = stem[,'SES_Factor']
+
+cor(q2, target)
+res <- cor.test(q2, target, 
+                    method = "pearson")
+res$p.value
+df <- data.frame(Q3.2= levels(factor(q2)), y = tapply(target, q2, mean))
+
+ggplot(df) +
+  aes(x=Q3.2, y=y, color=Q3.2) + 
+  labs(x = "Level of preparedness from hs for STEM",
+       y = "Stress Level",
+       title = "Q3.2 versus Stress Level") +
+  geom_bar(stat="identity", aes(fill = Q3.2)) +
+  theme_minimal() +
+  theme(plot.title = element_text(hjust = 0.5))
+
+cor(q5, target)
+res <- cor.test(q5, target, 
+                    method = "pearson")
+res$p.value
+df <- data.frame(Q3.5= levels(factor(q5)), y = tapply(target, q5, mean))
+
+ggplot(df) +
+  aes(x=Q3.5, y=y, color=Q3.5) + 
+  labs(x = "Level of work needed to pay for expenses",
+       y = "Stress Level",
+       title = "Q3.5 versus Stress Level") +
+  geom_bar(stat="identity", aes(fill = Q3.5)) +
+  theme_minimal() +
+  theme(plot.title = element_text(hjust = 0.5))
+
+
+cor(q15, target)
+res <- cor.test(q15, target, 
+                    method = "pearson")
+res$p.value
+df <- data.frame(Q3.15= levels(factor(q15)), y = tapply(target, q15, mean))
+
+ggplot(df) +
+  aes(x=Q3.15, y=y, color=Q3.15) + 
+  labs(x = "To what extent do you know what you want to do after graduation",
+       y = "Stress Level",
+       title = "Q3.15 versus Stress Level") +
+  geom_bar(stat="identity", aes(fill = Q3.15)) +
+  theme_minimal() +
+  theme(plot.title = element_text(hjust = 0.5))
+
+cor(q14, target)
+res <- cor.test(q14, target, 
+                    method = "pearson")
+res$p.value
+df <- data.frame(Q3.14= levels(factor(q14)), y = tapply(target, q14, mean))
+
+ggplot(df) +
+  aes(x=Q3.14, y=y, color=Q3.14) + 
+  labs(x = "To what extent do you seek help when you have an academic problem",
+       y = "Stress Level",
+       title = "Q3.14 versus Stress Level") +
+  geom_bar(stat="identity", aes(fill = Q3.14)) +
+  theme_minimal() +
+  theme(plot.title = element_text(hjust = 0.5))
+
+cor(ses, target)
+res <- cor.test(ses, target, 
+                    method = "pearson")
+res$p.value
+df <- data.frame(SES= levels(factor(ses)), y = tapply(target, ses, mean))
+
+ggplot(df) +
+  aes(x=SES, y=y, color=SES) + 
+  labs(x = "SES",
+       y = "Stress Level",
+       title = "SES versus Stress Level") +
+  geom_bar(stat="identity", aes(fill = SES)) +
+  theme_minimal() +
+  theme(plot.title = element_text(hjust = 0.5))
+```
+
+
+```{r}
+# ANOVA
+gender <- aov(Stress_Factor~Gender, data = stem)
+summary(gender) # significantly different
+
+orientation <- aov(Stress_Factor~Orientation, data = stem)
+summary(orientation) # not significantly different
+
+year <- aov(Stress_Factor~Year, data = stem)
+summary(year) # not significantly different
+
+international <- aov(Stress_Factor~International, data = stem)
+summary(international) # significantly different
+
+transfer <- aov(Stress_Factor~Transfer, data = stem)
+summary(transfer) # not significantly different
+
+efl <- aov(Stress_Factor~EFL, data = stem)
+summary(efl) # not significantly different
+
+firstgen <- aov(Stress_Factor~FirstGen, data = stem)
+summary(firstgen) # significantly different
+
+# simple linear reg
+gpa_lm <- lm(Stress_Factor ~ GPA, data = stem)
+summary(gpa_lm) # gpa is significant 
+
+# we will use gender, firstgen, and gpa in our linear reg, Q3.2, Q3.5, Q3.14
+```
+
+## Modeling
+We have broken up our final variables into 3 separate subcategories, or blocks.
+
+Block1: SES - Q3.2, Q3.5
+
+Block2: Demographics - Gender, FirstGen
+
+Block3: Academic Awareness/Direction: Q3.14, GPA
+```{r}
+# block1
+m1 = lm(Stress_Factor ~ as.factor(Q3.2) + as.factor(Q3.5), data=stem)
+summary(m1)
+# adj R2 0.1004 
+
+# block1 + block2
+m2 = lm(Stress_Factor ~ as.factor(Q3.2) + as.factor(Q3.5) + Gender + FirstGen, data=stem)
+summary(m2)
+# adj R2 0.131 
+
+# block1 + block2 + block3 
+m3 = lm(Stress_Factor ~ as.factor(Q3.2) + as.factor(Q3.5) + Gender + FirstGen + as.factor(Q3.14) + GPA, data=stem)
+summary(m3)
+# adj R2 0.1625 
+
+# block1 + block2 + block3 + interaction
+m4 = lm(Stress_Factor ~ as.factor(Q3.2) + as.factor(Q3.5) + Gender + FirstGen + as.factor(Q3.14) + GPA + as.factor(Q3.2) * GPA, data=stem)
+summary(m4)
+# adj R2 0.1726 
+```
+Adding each block to the model increases adj R2 each time. After adding all the blocks and interaction terms, we get a final adjusted R2 of 0.1726. By looking at the output of each individual submodel, we can see the effects of each block on Stress overall. 
+
+## Plots
+```{r}
+stem$Q3.2 = as.factor(stem$Q3.2)
+
+ggplot(stem) +
+  aes(x = GPA, y = Stress_Factor, color=Q3.2) +
+  geom_boxplot() +
+  geom_smooth(method = lm, se=F) +
+  labs(x = "GPA",
+       y = "Stress_Factor",
+       color = "HS Prep STEM") 
+
+interaction.plot(stem$GPA, stem$Q3.2, stem$Stress_Factor,xlab="GPA", ylab="Stress_Factor", trace.label="HS Prep STEM")
+```
+
+For students who strongly felt their HS prepped them well for STEM (level=4), their stress levels decreased drastically as GPA increases.
+Overall students who strongly felt their HS did NOT prep for STEM (level=1) had the highest overall stress, across all GPAs, and their stress levels only slightly decrease with higher GPA. 
+For students who felt their HS slightly prepared them for STEM (level=2), had high stress at low GPAs and dropped drastically as GPA increased. 
+For students who felt their HS prepared them for STEM (level=3) had the overall lowest stress throughout all GPAs, and stress levels remained the same no matter what GPA the students had.
+
+
+
+
