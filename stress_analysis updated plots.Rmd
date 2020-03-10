@@ -113,8 +113,6 @@ stem$GPA[stem$GPA > 3.5] = ">3.5"
 
 stem$GPA <- factor(stem$GPA, levels = c("< 3.0", "3.0 <= x <= 3.5", ">3.5"))
 
-barplot(tapply(stem$Stress_Factor, stem$GPA, mean,na.rm=TRUE), main="GPA vs. Average Stress Level")
-
 ggplot(stem) +
   aes(x=GPA, y=Stress_Factor, color=GPA) + 
   labs(x = "GPA",
