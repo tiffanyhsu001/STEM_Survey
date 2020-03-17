@@ -22,32 +22,66 @@ stem = stem[!is.na(stem$Gender),]
 stem$Orientation[stem$Orientation == 'straight'] <- 'Heterosexual'
 stem = drop.levels(stem)
 
+# make a function for exploratory plotting
+plotting <- function(xvar_name, xvar, title, xlab, ylab) {
+  df <- data.frame(xvar_name = levels(factor(xvar)), Stress_Factor = tapply(stem$Stress_Factor, xvar, mean))
+  ggplot(na.omit(df)) +
+  aes(x=xvar_name, y=Stress_Factor) + 
+  labs(x = xlab,
+       y = ylab,
+       title = title,
+       fill = xlab) +
+  geom_bar(stat="identity", aes(fill = xvar_name)) +
+  theme_minimal() +
+  theme(plot.title = element_text(hjust = 0.5))
+}  
 
-# gender
-barplot(tapply(stem$Stress_Factor, stem$Gender, mean), main="Gender vs. Average Stress Level")
-
-# orientation
-barplot(tapply(stem$Stress_Factor, stem$Orientation, mean), main="Sexual Orientation vs. Average Stress Level")
-
-# year
-# refactor order
-stem$Year <- factor(stem$Year, levels = c("Freshman", "Sophomore", "Junior", "Senior", "Fifth Year", "Graduate Student"))
-barplot(tapply(stem$Stress_Factor, stem$Year, mean), main="Year vs. Average Stress Level")
+# Gender
+# Levels: Female, Male
+plotting(Gender, stem$Gender, "Gender vs. Average Stress Level", "Gender", "Stress_Factor")
 
 
-# international
-barplot(tapply(stem$Stress_Factor, stem$International, mean,na.rm=TRUE), main="International vs. Average Stress Level")
+# Sexual Orientation
+# Levels: Bisexual, Gay/ Homosexual, Heterosexual, Pansexual, Queer, I prefer not to say
+plotting(Orientation, stem$Orientation, "Sexual Orientation vs. Average Stress Level", "Sexual Orientation", "Stress_Factor")
 
-# transfer
-barplot(tapply(stem$Stress_Factor, stem$Transfer, mean,na.rm=TRUE), main="Transfer vs. Average Stress Level")
+# Year in College
+# Levels: Freshman, Sophomore, Junior, Senior, Fifth Year, Graduate Student
+df <- data.frame(Year= levels(factor(stem$Year)), Stress_Factor = tapply(stem$Stress_Factor, stem$Year, mean))
+df$Year <- factor(df$Year, levels = c("Freshman", "Sophomore", "Junior", "Senior", "Fifth Year", "Graduate Student")) # refactoring order to reflect standard higher education progression in America
 
-# efl
-barplot(tapply(stem$Stress_Factor, stem$EFL, mean), main="EFL vs. Average Stress Level")
+ggplot(na.omit(df)) +
+  aes(x=Year, y=Stress_Factor, color=Year) + 
+  labs(x = "Year in College",
+       y = "Stress_Factor",
+       title = "Year in College vs. Average Stress Level") +
+  geom_bar(stat="identity", aes(fill = Year)) +
+  theme_minimal() +
+  theme(plot.title = element_text(hjust = 0.5))
 
-# first gen
-barplot(tapply(stem$Stress_Factor, stem$FirstGen, mean,na.rm=TRUE), main="First Gen vs. Average Stress Level")
+# International 
+# Levels: Yes, No (Question: Are you an international student?)
+plotting(International, stem$International, "International vs. Average Stress Level", "International Student?", "Stress_Factor")
 
-# gpa
+
+# Transfer
+# Levels: Yes, No (Question: Did you transfer from a community college?)
+plotting(Transfer, stem$Transfer, "Transfer vs. Average Stress Level", "Transfer Student?", "Stress_Factor")
+
+
+# EFL (English as a Foreign Language)
+# Levels: Yes, No (Question: Is English your first language?)
+plotting(EFL, stem$EFL, "EFL vs. Average Stress Level", "EFL?", "Stress_Factor")
+
+df <- data.frame(EFL= levels(factor(stem$EFL)), Stress_Factor = tapply(stem$Stress_Factor, stem$EFL, mean))
+
+# First Generation
+# Levels: Yes, No (Question: Are you the first generation in your family to attend college?)
+plotting(FirstGen, stem$FirstGen, "First Gen vs. Average Stress Level", "First Generation?", "Stress_Factor")
+
+
+
+# GPA
 stem$GPA[stem$GPA == 0] <- NA
 #range(stem$GPA,na.rm=TRUE)
 
@@ -57,12 +91,21 @@ stem$GPA[stem$GPA > 3.5] = ">3.5"
 
 stem$GPA <- factor(stem$GPA, levels = c("< 3.0", "3.0 <= x <= 3.5", ">3.5"))
 
-barplot(tapply(stem$Stress_Factor, stem$GPA, mean,na.rm=TRUE), main="GPA vs. Average Stress Level")
+df <- data.frame(GPA= levels(factor(stem$GPA)), Stress_Factor = tapply(stem$Stress_Factor, stem$GPA, mean))
+df$GPA <- factor(df$GPA, levels = c("< 3.0", "3.0 <= x <= 3.5", ">3.5"))
+
+ggplot(na.omit(df)) +
+  aes(x=GPA, y=Stress_Factor, color=GPA) + 
+  labs(x = "GPA",
+       y = "Stress_Factor",
+       title = "GPA vs. Average Stress Level") +
+  geom_bar(stat="identity", aes(fill = GPA)) +
+  theme_minimal() +
+  theme(plot.title = element_text(hjust = 0.5))
 ```
 
 ```{r}
-# q3.2, .5, .15, year, gender
-# how correlated are these variables with the stress_factor variable
+# exploring SES questions: q3.2, 4, 5, 6, 14, 15, ses_factor
 
 stem$GPA[stem$GPA == 0] = mean(stem$GPA) 
 target = stem[,'Stress_Factor']
@@ -78,30 +121,33 @@ ses = stem[,'SES_Factor']
 
 q2a<- aov(Stress_Factor~as.factor(q2), data = stem)
 summary(q2a) #significant
-barplot(tapply(target, q2, mean), main = 'Q3.2 versus Stress Level', ylab = 'Stress Level', xlab = 'Level of preparedness from hs for STEM') 
+plotting(Q3.2, stem$Q3.2,"Q3.2 versus Avg. Stress Level","Level of preparedness from hs for STEM", "Stress Level")
+
 
 q4a<- aov(Stress_Factor~as.factor(q4), data = stem)
 summary(q4a) # significant
-barplot(tapply(target, q4, mean), main = 'Q3.4 versus Stress Level', ylab = 'Stress Level', xlab = 'Family struggled financially growing up') 
+plotting(Q3.4, stem$Q3.4,"Q3.4 versus Avg. Stress Level","Family struggled financially growing up", "Stress Level")
+
 
 q5a<- aov(Stress_Factor~as.factor(q5), data = stem)
 summary(q5a) # significant
-barplot(tapply(target, q5, mean), main = 'Q3.5 versus Stress Level', ylab = 'Stress Level', xlab = 'Level of work needed to pay for expenses') 
+plotting(Q3.5, stem$Q3.5,"Q3.5 versus Avg. Stress Level","Level of work needed to pay for expenses", "Stress Level")
+
 
 q6a<- aov(Stress_Factor~as.factor(q6), data = stem)
 summary(q6a) # significant
-barplot(tapply(target, q6, mean), main = 'Q3.6 versus Stress Level', ylab = 'Stress Level', xlab = 'Level graduating and needing  to find a job immediately') 
+plotting(Q3.6, stem$Q3.6,"Q3.6 versus Avg. Stress Level","Level graduating and needing  to find a job immediately", "Stress Level")
+
 
 q14a<- aov(Stress_Factor~as.factor(q14), data = stem)
 summary(q14a) # significant
-barplot(tapply(target, q14, mean), main = 'Q3.14 versus Stress Level', ylab = 'Stress Level', xlab = 'To what extent do you seek help when you have an academic problem')
+plotting(Q3.14, stem$Q3.14,"Q3.14 versus Avg. Stress Level","Seek help with academic problem", "Stress Level")
 
 # correlation for numeric vars
 cor(ses, target)
 res <- cor.test(ses, target, 
                     method = "pearson")
 res$p.value
-barplot(tapply(target, ses, mean), main = 'SES versus Stress Level', ylab = 'Stress Level', xlab = 'SES', ylim = c(8,12))
 
 # q3.2, 3.4, 3.5, 3.6, 3.14, SES are all significant
 ```
@@ -119,36 +165,42 @@ q24 = stem[,'Q3.24']
 
 q15a<- aov(Stress_Factor~as.factor(q15), data = stem)
 summary(q15a) # not significant
-barplot(tapply(target, q15, mean), main = 'Q3.15 versus Stress Level', ylab = 'Stress Level', xlab = 'To what extent do you know what you want to do after graduation') 
+plotting(Q3.15, stem$Q3.15,"Q3.15 versus Avg. Stress Level","Know what to do after grad", "Stress Level")
 
 
 q16a<- aov(Stress_Factor~as.factor(q16), data = stem)
 summary(q16a) # significant
-barplot(tapply(target, q16, mean), main = 'Q3.16 versus Stress Level', ylab = 'Stress Level', xlab = 'Q3.16')
+plotting(Q3.16, stem$Q3.16,"Q3.16 versus Avg. Stress Level","Feel excluded at UCLA", "Stress Level")
+
 
 q19a<- aov(Stress_Factor~as.factor(q19), data = stem)
 summary(q19a) # significant
-barplot(tapply(target, q19, mean), main = 'Q3.19 versus Stress Level', ylab = 'Stress Level', xlab = 'Q3.19')
+plotting(Q3.19, stem$Q3.19,"Q3.19 versus Avg. Stress Level","Feel belonging at UCLA", "Stress Level")
+
 
 q20a<- aov(Stress_Factor~as.factor(q20), data = stem)
 summary(q20a) # significant
-barplot(tapply(target, q20, mean), main = 'Q3.20 versus Stress Level', ylab = 'Stress Level', xlab = 'Q3.20')
+plotting(Q3.20, stem$Q3.20,"Q3.20 versus Avg. Stress Level","Parents understand UCLA standards", "Stress Level")
+
 
 q21a<- aov(Stress_Factor~as.factor(q21), data = stem)
 summary(q21a) # significant
-barplot(tapply(target, q21, mean), main = 'Q3.21 versus Stress Level', ylab = 'Stress Level', xlab = 'Q3.21')
+plotting(Q3.21, stem$Q3.21,"Q3.21 versus Avg. Stress Level","Parents value college education", "Stress Level")
+
 
 q22a<- aov(Stress_Factor~as.factor(q22), data = stem)
 summary(q22a) # significant
-barplot(tapply(target, q22, mean), main = 'Q3.22 versus Stress Level', ylab = 'Stress Level', xlab = 'Q3.22')
+plotting(Q3.22, stem$Q3.22,"Q3.22 versus Avg. Stress Level","Happy at UCLA", "Stress Level")
+
 
 q23a<- aov(Stress_Factor~as.factor(q23), data = stem)
 summary(q23a) # significant
-barplot(tapply(target, q23, mean), main = 'Q3.23 versus Stress Level', ylab = 'Stress Level', xlab = 'Q3.23')
+plotting(Q3.23, stem$Q3.23,"Q3.23 versus Avg. Stress Level","Confidence in ability to succeed at UCLA", "Stress Level")
+
 
 q24a<- aov(Stress_Factor~as.factor(q24), data = stem)
 summary(q24a) # significant
-barplot(tapply(target, q24, mean), main = 'Q3.24 versus Stress Level', ylab = 'Stress Level', xlab = 'Q3.24')
+plotting(Q3.24, stem$Q3.24,"Q3.24 versus Avg. Stress Level","Diverse group interaction at UCLA", "Stress Level")
 
 # Q3.16, 3.19, 3.20 - 3.24 all significant
 ```
@@ -185,6 +237,32 @@ summary(gpa_lm) # gpa is significant
 # q3.2, 3.4, 3.5, 3.6, 3.14, SES are all significant
 # Q3.16, 3.19, 3.20 - 3.24 all significant
 ```
+
+
+```{r}
+## Indicators
+# Analyzing relationship between SES which is an indicator for socioeconomic struggle with Stress_Factor. It represents the sum of responses to three questions, Q3.4 - My family struggled financially when I was growing up, Q3.5 - I need to work to pay for my expenses and Q3.6 - I need to graduate and get a job as soon as possible; with each question being measured as a continuous variable from 0 to 1 (0 =  Low level of struggle and 1 = High level of struggle). We use significance level = 0.01 for the best results.
+
+cor(ses, target)
+res <- cor.test(ses, target, 
+                    method = "pearson")
+res$p.value # p-value is statistically significant
+
+df <- data.frame(SES= levels(factor(ses)), y = tapply(target, ses, mean))
+df$SES <- factor(df$SES, levels = c("3","4","5","6","7","8","9","10","11","12","13","14"))
+
+ggplot(df) +
+  aes(x=SES, y=y, color=SES) + 
+  labs(x = "SES",
+       y = "Stress Level",
+       title = "SES versus Stress Level") +
+  geom_bar(stat="identity", aes(fill = SES)) +
+  theme_minimal() +
+  theme(plot.title = element_text(hjust = 0.5))
+
+# P-value is statistically significant, however, we cannot accurately use SES as a predictor in our model due to unequal sample sizes for each level of the SES_Factor indicator.
+```
+
 
 ## Modeling
 We have broken up our final variables into 3 separate subcategories, or blocks. We should check each block individually and see which is most important.
@@ -261,17 +339,27 @@ summary(m7)
 ```
 Block4: Belonging had the most influence on increasing R2 for Stress.  
 
-## Plots
 ```{r}
-stem$Q3.2 = as.factor(stem$Q3.2)
-
-interaction.plot(stem$GPA, stem$Q3.2, stem$Stress_Factor,xlab="GPA", ylab="Stress_Factor", trace.label="HS Prep STEM")
+summary(m7)
 ```
 
-For students who strongly felt their HS prepped them well for STEM (level=4), their stress levels decreased drastically as GPA increases.
-Overall students who strongly felt their HS did NOT prep for STEM (level=1) had the highest overall stress, across all GPAs, and their stress levels only slightly decrease with higher GPA. 
-For students who felt their HS slightly prepared them for STEM (level=2), had high stress at low GPAs and dropped drastically as GPA increased. 
-For students who felt their HS prepared them for STEM (level=3) had the overall lowest stress throughout all GPAs, and stress levels remained the same no matter what GPA the students had.
+
+## Plots
+```{r}
+GPA = factor(stem$GPA, levels = c("< 3.0", "3.0 <= x <= 3.5", ">3.5")) 
+Q3.2 = as.factor(stem$Q3.2)
+Stress_Factor = as.numeric(stem$Stress_Factor)
+
+interaction <- glm(Stress_Factor~GPA*Q3.2, family=gaussian)
+
+interaction.plot(GPA, stem$Q3.2, stem$Stress_Factor,xlab="GPA", ylab="Stress_Factor", trace.label="HS Prep STEM")
+plot(allEffects(interaction), xlab="Q3.2 (Level of STEM preparation in High School)", ylab="Stress_Factor", main="Interaction of GPA and HS Prep in STEM on Stress_Factor", ask=FALSE)
+```
+Overall, stress tends to go down with higher GPA, as students with GPAs below 3.0 had higher stress and students with GPA 3.0 or higher tended to have lower stress. Students with GPA under 3.0 had fluctuating stress levels with increasing preparedness for STEM. There was a drastic drop in stress at HS prep = 3, and a prominent increase in stress at HS prep = 4. 
+
+Overall students who strongly felt their HS did NOT prep for STEM (level=1) had the highest overall stress, across all GPAs, and their stress levels only slightly decrease with higher GPA. Students who felt their HS prepared them for STEM (level=3) had the overall lowest stress throughout all GPAs, and stress levels remained the same no matter what GPA the students had.  
+For students who felt their HS slightly prepared them for STEM (level=2), had high stress at low GPAs and dropped drastically as GPA increased. Similarly, students who strongly felt their HS prepped them well for STEM (level=4), their stress levels decreased drastically as GPA increases. 
+
 
 
 
