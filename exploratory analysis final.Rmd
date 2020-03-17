@@ -343,8 +343,14 @@ Q3.2 = stem$Q3.2
 Stress_Factor = stem$Stress_Factor
 
 m5 <- glm(Stress_Factor~GPA+Q3.2+GPA*Q3.2, family="binomial")
+GPA = stem$GPA
+levels(GPA) = c("< 3.0", "3.0 <= x <= 3.5", ">3.5")
+Q3.2 = stem$Q3.2
+Stress_Factor = stem$Stress_Factor
 
-plot(allEffects(m5),ask=FALSE)
+m5 <- glm(Stress_Factor~GPA+Q3.2+GPA*Q3.2, family="binomial")
+
+plot(allEffects(m5),xlab="Q3.2 (Level of STEM preparation in High School)", ylab="Stress_Factor", main="Interation of GPA and HS Prep in STEM on Stress_Factor", ask=FALSE)
 ```
 
 
