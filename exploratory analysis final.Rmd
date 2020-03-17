@@ -1,0 +1,350 @@
+---
+title: "Stress Analysis"
+output: html_notebook
+---
+
+```{r}
+## Reading Data
+
+stem = read.csv("~/Downloads/STEM_Survey-master/stem_newfactors.csv", na.strings=c("",NA))
+head(stem)
+```
+
+### Exploratory Analysis
+```{r}
+library(gdata)
+library(dplyr)
+library(ggplot2)
+library(effects)
+library(stats)
+
+## Data Cleaning.
+# First, we rename factor levels to avoid repetition of the same ideas. Then we omit levels for factors with insufficient sample sizes and remove NAs in the data.
+
+stem$Gender[stem$Gender == 'Genderfluid' |  stem$Gender == 'Transgender female'] <- NA
+stem$Orientation[stem$Orientation == 'straight'] <- 'Heterosexual'
+stem = drop.levels(stem)
+```
+
+```{r}
+## Variables of Study (binary/categorical)
+# Gender
+# Levels: Female, Male
+
+df <- data.frame(Gender= levels(factor(stem$Gender)), Stress_Factor = tapply(stem$Stress_Factor, stem$Gender, mean))
+
+ggplot(na.omit(df)) +
+  aes(x=Gender, y=Stress_Factor, color=Gender) + 
+  labs(x = "Gender",
+       y = "Stress_Factor",
+       title = "Gender vs. Average Stress Level") +
+  geom_bar(stat="identity", aes(fill = Gender)) +
+  theme_minimal() +
+  theme(plot.title = element_text(hjust = 0.5))
+
+# Sexual Orientation
+# Levels: Bisexual, Gay/ Homosexual, Heterosexual, Pansexual, Queer, I prefer not to say
+
+df <- data.frame(Orientation= levels(factor(stem$Orientation)), Stress_Factor = tapply(stem$Stress_Factor, stem$Orientation, mean))
+
+ggplot(na.omit(df)) +
+  aes(x=Orientation, y=Stress_Factor, color=Orientation) + 
+  labs(x = "Sexual Orientation",
+       y = "Stress_Factor",
+       title = "Sexual Orientation vs. Average Stress Level") +
+  geom_bar(stat="identity", aes(fill = Orientation)) +
+  theme_minimal() +
+  theme(plot.title = element_text(hjust = 0.5))
+
+# Year in College
+# Levels: Freshman, Sophomore, Junior, Senior, Fifth Year, Graduate Student
+
+df <- data.frame(Year= levels(factor(stem$Year)), Stress_Factor = tapply(stem$Stress_Factor, stem$Year, mean))
+
+df$Year <- factor(df$Year, levels = c("Freshman", "Sophomore", "Junior", "Senior", "Fifth Year", "Graduate Student")) # refactoring order to reflect standard higher education progression in America
+
+ggplot(na.omit(df)) +
+  aes(x=Year, y=Stress_Factor, color=Year) + 
+  labs(x = "Year in College",
+       y = "Stress_Factor",
+       title = "Year in College vs. Average Stress Level") +
+  geom_bar(stat="identity", aes(fill = Year)) +
+  theme_minimal() +
+  theme(plot.title = element_text(hjust = 0.5))
+
+# International 
+# Levels: Yes, No (Question: Are you an international student?)
+
+df <- data.frame(International= levels(factor(stem$International)), Stress_Factor = tapply(stem$Stress_Factor, stem$International, mean))
+
+ggplot(na.omit(df)) +
+  aes(x=International, y=Stress_Factor, color=International) + 
+  labs(x = "International Student?",
+       y = "Stress_Factor",
+       title = "International vs. Average Stress Level") +
+  geom_bar(stat="identity", aes(fill = International)) +
+  theme_minimal() +
+  theme(plot.title = element_text(hjust = 0.5))
+
+# Transfer
+# Levels: Yes, No (Question: Did you transfer from a community college?)
+
+df <- data.frame(Transfer= levels(factor(stem$Transfer)), Stress_Factor = tapply(stem$Stress_Factor, stem$Transfer, mean))
+
+ggplot(na.omit(df)) +
+  aes(x=Transfer, y=Stress_Factor, color=Transfer) + 
+  labs(x = "Transfer Student?",
+       y = "Stress_Factor",
+       title = "Transfer vs. Average Stress Level") +
+  geom_bar(stat="identity", aes(fill = Transfer)) +
+  theme_minimal() +
+  theme(plot.title = element_text(hjust = 0.5))
+
+# EFL (English as a Foreign Language)
+# Levels: Yes, No (Question: Is English your first language?)
+  
+df <- data.frame(EFL= levels(factor(stem$EFL)), Stress_Factor = tapply(stem$Stress_Factor, stem$EFL, mean))
+
+ggplot(na.omit(df)) +
+  aes(x=EFL, y=Stress_Factor, color=EFL) + 
+  labs(x = "EFL?",
+       y = "Stress_Factor",
+       title = "EFL vs. Average Stress Level") +
+  geom_bar(stat="identity", aes(fill = EFL)) +
+  theme_minimal() +
+  theme(plot.title = element_text(hjust = 0.5))
+
+# First Generation
+# Levels: Yes, No (Question: Are you the first generation in your family to attend college?)
+
+df <- data.frame(FirstGen= levels(factor(stem$FirstGen)), Stress_Factor = tapply(stem$Stress_Factor, stem$FirstGen, mean))
+
+ggplot(na.omit(df)) +
+  aes(x=FirstGen, y=Stress_Factor, color=FirstGen) + 
+  labs(x = "First Generation?",
+       y = "Stress_Factor",
+       title = "First Gen vs. Average Stress Level") +
+  geom_bar(stat="identity", aes(fill = FirstGen)) +
+  theme_minimal() +
+  theme(plot.title = element_text(hjust = 0.5))
+```
+
+```{r}
+
+## Variables of Study (numerical)
+
+# UCLA GPA
+
+stem$GPA[stem$GPA == 0] <- NA
+
+stem$GPA[stem$GPA < 3.0] = "< 3.0"
+stem$GPA[stem$GPA >= 3.0 & stem$GPA <= 3.5] = "3.0 <= x <= 3.5"
+stem$GPA[stem$GPA > 3.5] = ">3.5"
+
+df <- data.frame(GPA= levels(factor(stem$GPA)), Stress_Factor = tapply(stem$Stress_Factor, stem$GPA, mean))
+df$GPA <- factor(df$GPA, levels = c("< 3.0", "3.0 <= x <= 3.5", ">3.5"))
+
+ggplot(na.omit(df)) +
+  aes(x=GPA, y=Stress_Factor, color=GPA) + 
+  labs(x = "GPA",
+       y = "Stress_Factor",
+       title = "GPA vs. Average Stress Level") +
+  geom_bar(stat="identity", aes(fill = GPA)) +
+  theme_minimal() +
+  theme(plot.title = element_text(hjust = 0.5))
+
+```
+
+```{r}
+
+## The relationship between stress factor and responses to the following few questions taken from the survey are analyzed for correlation using the correlation coefficient cor() and by testing for correlation between paired samples using cor.test(), as well as data visualizations. We use significance level = 0.01 for the best results.
+
+stem$GPA[stem$GPA == 0] = mean(stem$GPA) 
+target = stem[,'Stress_Factor']
+
+q2 = stem[,'Q3.2']
+q5 = stem[,'Q3.5']
+q15 = stem[,'Q3.15']
+q14 = stem[,'Q3.14']
+ses = stem[,'SES_Factor']
+
+# Question 3.2: My high school prepared me well for STEM classes.
+
+cor(q2, target)
+res <- cor.test(q2, target, 
+                    method = "pearson")
+res$p.value # p-value is statistically significant
+
+df <- data.frame(Q3.2= levels(factor(q2)), y = tapply(target, q2, mean))
+
+ggplot(df) +
+  aes(x=Q3.2, y=y, color=Q3.2) + 
+  labs(x = "Level of preparedness from hs for STEM",
+       y = "Stress Level",
+       title = "Q3.2 versus Stress Level") +
+  geom_bar(stat="identity", aes(fill = Q3.2)) +
+  theme_minimal() +
+  theme(plot.title = element_text(hjust = 0.5))
+
+# Question 3.5: I need to work to pay for my expenses. 
+
+cor(q5, target)
+res <- cor.test(q5, target, 
+                    method = "pearson")
+res$p.value # p-value is statistically significant
+
+df <- data.frame(Q3.5= levels(factor(q5)), y = tapply(target, q5, mean))
+
+ggplot(df) +
+  aes(x=Q3.5, y=y, color=Q3.5) + 
+  labs(x = "Level of work needed to pay for expenses",
+       y = "Stress Level",
+       title = "Q3.5 versus Stress Level") +
+  geom_bar(stat="identity", aes(fill = Q3.5)) +
+  theme_minimal() +
+  theme(plot.title = element_text(hjust = 0.5))
+
+# Question 3.14:  I seek help when I have an academic problem.
+
+cor(q14, target)
+res <- cor.test(q14, target, 
+                    method = "pearson")
+res$p.value # p-value is statistically significant
+
+df <- data.frame(Q3.14= levels(factor(q14)), y = tapply(target, q14, mean))
+
+ggplot(df) +
+  aes(x=Q3.14, y=y, color=Q3.14) + 
+  labs(x = "To what extent do you seek help when you have an academic problem",
+       y = "Stress Level",
+       title = "Q3.14 versus Stress Level") +
+  geom_bar(stat="identity", aes(fill = Q3.14)) +
+  theme_minimal() +
+  theme(plot.title = element_text(hjust = 0.5))
+
+# Question 3.15: I have a general idea about what I want to do after graduation.
+
+cor(q15, target)
+res <- cor.test(q15, target, 
+                    method = "pearson")
+res$p.value
+
+df <- data.frame(Q3.15= levels(factor(q15)), y = tapply(target, q15, mean))
+
+ggplot(df) +
+  aes(x=Q3.15, y=y, color=Q3.15) + 
+  labs(x = "To what extent do you know what you want to do after graduation",
+       y = "Stress Level",
+       title = "Q3.15 versus Stress Level") +
+  geom_bar(stat="identity", aes(fill = Q3.15)) +
+  theme_minimal() +
+  theme(plot.title = element_text(hjust = 0.5))
+```
+
+```{r}
+
+## Indicators
+# Analyzing relationship between SES which is an indicator for socioeconomic struggle with Stress_Factor. It represents the sum of responses to three questions, Q3.4 - My family struggled financially when I was growing up, Q3.5 - I need to work to pay for my expenses and Q3.6 - I need to graduate and get a job as soon as possible; with each question being measured as a continuous variable from 0 to 1 (0 =  Low level of struggle and 1 = High level of struggle). We use significance level = 0.01 for the best results.
+
+cor(ses, target)
+res <- cor.test(ses, target, 
+                    method = "pearson")
+res$p.value # p-value is statistically significant
+
+df <- data.frame(SES= levels(factor(ses)), y = tapply(target, ses, mean))
+
+ggplot(df) +
+  aes(x=SES, y=y, color=SES) + 
+  labs(x = "SES",
+       y = "Stress Level",
+       title = "SES versus Stress Level") +
+  geom_bar(stat="identity", aes(fill = SES)) +
+  theme_minimal() +
+  theme(plot.title = element_text(hjust = 0.5))
+
+# P-value is statistically significant, however, we cannot accurately use SES as a predictor in our model due to unequal sample sizes for each level of the SES_Factor indicator.
+```
+
+
+```{r}
+## Now that we've analyzed each variable of study, we move on to assess their significance. Based on the results of ANOVA/linear regression outputs (depending on type of variable analyzed), we can narrow down the variables that are statistically significsnt to be included in the final model and eliminate the ones that aren't. We use significance level = 0.01 for the best results.
+
+# The following ANOVA tests to assess the significance of categorical variables, namely: Gender, Orientation, Year, International, Transfer, EFL, and FirstGen, to our model.
+
+gender <- aov(Stress_Factor~Gender, data = stem)
+summary(gender) # p-value is statistically significant
+
+orientation <- aov(Stress_Factor~Orientation, data = stem)
+summary(orientation) # p-value is not statistically significant
+
+year <- aov(Stress_Factor~Year, data = stem)
+summary(year)  # p-value is not statistically significant
+
+international <- aov(Stress_Factor~International, data = stem)
+summary(international) # p-value is not statistically significant (at alpha = 0.01)
+
+transfer <- aov(Stress_Factor~Transfer, data = stem)
+summary(transfer)  # p-value is not statistically significant
+
+efl <- aov(Stress_Factor~EFL, data = stem)
+summary(efl)  # p-value is not statistically significant
+
+firstgen <- aov(Stress_Factor~FirstGen, data = stem)
+summary(firstgen) # p-value is statistically significant
+
+# The following simple linear regression assesses the significance of the numerical predictor GPA for our final model.
+
+gpa_lm <- lm(Stress_Factor ~ GPA, data = stem)
+summary(gpa_lm) # GPA is statistically significant 
+
+# We find that the variables Gender, FirstGen and GPA are statistically significant at alpha = 0.01. Therefore, we include these variables in the final model as predictors. The p-values for correlation tests for Q3.2, Q3.5 and Q3.14 are statistcally significant at alpha = 0.01, so we include these questions as predictors in our model as well. 
+```
+
+## Modeling
+
+We have broken up our final variables into 3 separate subcategories, or blocks.
+
+Block1: SES - Q3.2, Q3.5
+
+Block2: Demographics - Gender, FirstGen
+
+Block3: Academic Awareness/Direction: Q3.14, GPA
+
+```{r}
+# Block 1
+m1 = lm(Stress_Factor ~ as.factor(Q3.2) + as.factor(Q3.5), data=stem)
+summary(m1)
+# Adj R^2: 0.09945
+
+# Block 1 + Block 2
+m2 = lm(Stress_Factor ~ as.factor(Q3.2) + as.factor(Q3.5) + Gender + FirstGen, data=stem)
+summary(m2)
+# Adj R^2: 0.131 
+
+# Block 1 + Block 2 + Block 3 
+m3 = lm(Stress_Factor ~ as.factor(Q3.2) + as.factor(Q3.5) + Gender + FirstGen + as.factor(Q3.14) + GPA, data=stem)
+summary(m3)
+# Adj R^2: 0.1625 
+
+# Block 1 + Block 2 + Block 3 + Interaction
+m4 = lm(Stress_Factor ~ as.factor(Q3.2) + as.factor(Q3.5) + Gender + FirstGen + as.factor(Q3.14) + GPA + as.factor(Q3.2) * GPA, data=stem)
+summary(m4)
+# Adj R^2: 0.1726 
+```
+
+Adding each block to the model increases Adj $R_{2}$ each time. After adding all the blocks and interaction terms, we get a final adjusted $R_{2}$ of 0.1726. By looking at the output of each individual submodel, we can see the effects of each block on Stress_Factor overall. 
+
+## Interaction Plot
+
+```{r}
+GPA = stem$GPA
+levels(GPA) = c("< 3.0", "3.0 <= x <= 3.5", ">3.5")
+Q3.2 = stem$Q3.2
+Stress_Factor = stem$Stress_Factor
+
+m5 <- glm(Stress_Factor~GPA+Q3.2+GPA*Q3.2, family="binomial")
+
+plot(allEffects(m5),ask=FALSE)
+```
+
+
