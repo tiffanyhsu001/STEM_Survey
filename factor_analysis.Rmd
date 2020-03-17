@@ -1,17 +1,495 @@
 ---
-title: "Factor Analysis"
-output: html_notebook
+title: 'STEM Data Analysis: Data Cleaning & Pooling Ordinal and Factor Analysis'
+output:
+  pdf_document: default
+  html_document:
+    df_print: paged
 ---
 
+# Cleaning, Pooling Ordinal Questions
 ```{r}
-stem = read.csv("pooled_stem.csv")
-head(stem)
+stem_org = read.csv("stem.csv")
+
+# subset out original dataset
+stem = stem_org[1:866,]
 ```
 
+```{r}
+# ordinal pooling, questions Q3.1 to Q3.24
+barplot(table(stem$Q3.1))
+table(stem$Q3.2)
+
+# change to numeric 1-5
+reordered = as.data.frame(sapply(stem, function(x) as.integer(factor(as.character(x), levels=c("Strongly Disagree","Disagree","Not Sure", "Agree", "Strongly Agree")))))
+
+stem[24:47] = reordered[24:47]
+```
+
+```{r}
+# make a copy incase we need original rows for later analysis
+stem_ordinal = stem[24:47]
+stem_ordinal = na.omit(stem_ordinal)
+```
+
+# Pooling Ordinal Questions 3.1 - 3.24
+## POOLING RULES: 
+- With 5 levels, the smallest quantity must be at least 10% of the data, otherwise combine @ tail.
+- after combining 2 columns, if they do not take up at least 15% of the data, then consider combining the 3 closest columns
+- do not combine 3 columns if they take up over 50% of entire data.
+- after combining 3 columns, if not at least 20% of data, combine again.
+- minimum of 2 levels, after pooling, maximum of 5 (no change).
+
+### 3.1 - 3.6
+```{r}
+#### Q3.1 ####
+
+# checking
+barplot(table(stem_ordinal$Q3.1))
+cat("Total of all levels:", sum(table(stem_ordinal$Q3.1)), "\n")
+cat("Total of levels:", sum(table(stem_ordinal$Q3.1)[1:3]), "\n")
+
+# changing levels
+stem_ordinal$Q3.1[stem_ordinal$Q3.1 == 1 | stem_ordinal$Q3.1 == 2 | stem_ordinal$Q3.1 == 3 ] <- 1
+stem_ordinal$Q3.1[stem_ordinal$Q3.1 == 4] <- 2
+stem_ordinal$Q3.1[stem_ordinal$Q3.1 == 5] <- 3
+
+# checking after 
+barplot(table(stem_ordinal$Q3.1)) # good
+
+#### Q3.2 ####
+
+# checking
+barplot(table(stem_ordinal$Q3.2))
+total=sum(table(stem_ordinal$Q3.2))
+levels=sum(table(stem_ordinal$Q3.2)[1:2])
+
+cat("Total of levels:", levels, "\n")
+cat("Proportion of levels to total", levels/total, "\n")
+
+
+# changing levels
+stem_ordinal$Q3.2[stem_ordinal$Q3.2 == 1 | stem_ordinal$Q3.2 == 2] <- 1
+stem_ordinal$Q3.2[stem_ordinal$Q3.2 == 3] <- 2
+stem_ordinal$Q3.2[stem_ordinal$Q3.2 == 4] <- 3
+stem_ordinal$Q3.2[stem_ordinal$Q3.2 == 5] <- 4
+
+
+# checking after 
+barplot(table(stem_ordinal$Q3.2)) # good
+
+#### Q3.3 ####
+
+# checking
+barplot(table(stem_ordinal$Q3.3))
+total=sum(table(stem_ordinal$Q3.3))
+levels=sum(table(stem_ordinal$Q3.3)[4:5])
+
+cat("Total of levels:", levels, "\n")
+cat("Proportion of levels to total", levels/total, "\n")
+
+# changing levels
+stem_ordinal$Q3.3[stem_ordinal$Q3.3 == 4 | stem_ordinal$Q3.3 == 5] <- 4
+
+# checking after 
+barplot(table(stem_ordinal$Q3.3)) # good
+
+
+#### Q3.4 ####
+
+# checking
+barplot(table(stem_ordinal$Q3.4))
+total=sum(table(stem_ordinal$Q3.4))
+levels=sum(table(stem_ordinal$Q3.4)[5])
+
+cat("Total of levels:", levels, "\n")
+cat("Proportion of levels to total", levels/total, "\n") # over 10% for 5 levels so clear
+
+# checking after 
+barplot(table(stem_ordinal$Q3.4)) # good
+
+
+#### Q3.5 ####
+
+# checking
+barplot(table(stem_ordinal$Q3.5))
+total=sum(table(stem_ordinal$Q3.5))
+levels=sum(table(stem_ordinal$Q3.5)[5])
+
+cat("Total of levels:", levels, "\n")
+cat("Proportion of levels to total", levels/total, "\n")
+
+# checking after 
+barplot(table(stem_ordinal$Q3.5)) # good
+
+
+#### Q3.6 ####
+
+# checking
+barplot(table(stem_ordinal$Q3.6))
+total=sum(table(stem_ordinal$Q3.6))
+levels=sum(table(stem_ordinal$Q3.6)[1])
+
+cat("Total of levels:", levels, "\n")
+cat("Proportion of levels to total", levels/total, "\n") # proportion is not at least 10%, combine 1 & 2
+
+# changing levels
+stem_ordinal$Q3.6[stem_ordinal$Q3.6 == 1 | stem_ordinal$Q3.3 == 2] <- 1
+stem_ordinal$Q3.6[stem_ordinal$Q3.6 == 3] <- 2
+stem_ordinal$Q3.6[stem_ordinal$Q3.6 == 4] <- 3
+stem_ordinal$Q3.6[stem_ordinal$Q3.6 == 5] <- 4
+
+# checking after 
+barplot(table(stem_ordinal$Q3.6)) # good
+```
+
+
+### 3.7 - 3.12
+```{r}
+#### Q3.7 ####
+
+# checking
+barplot(table(stem_ordinal$Q3.7))
+total=sum(table(stem_ordinal$Q3.7))
+levels=sum(table(stem_ordinal$Q3.7)[5])
+
+cat("Total of levels:", levels, "\n")
+cat("Proportion of levels to total", levels/total, "\n") # proportion is not at least 10%, combine 4 & 5
+
+# changing levels
+stem_ordinal$Q3.7[stem_ordinal$Q3.7 == 4 | stem_ordinal$Q3.7 == 5] <- 4
+
+# checking after 
+barplot(table(stem_ordinal$Q3.7)) # good
+
+
+#### Q3.8 ####
+# checking
+barplot(table(stem_ordinal$Q3.8))
+total=sum(table(stem_ordinal$Q3.8))
+levels=sum(table(stem_ordinal$Q3.8)[1])
+
+cat("Total of levels:", levels, "\n")
+cat("Proportion of levels to total", levels/total, "\n") # not 10%, combine 1 & 2
+
+# changing levels
+stem_ordinal$Q3.8[stem_ordinal$Q3.8 == 1 | stem_ordinal$Q3.8 == 2] <- 1
+stem_ordinal$Q3.8[stem_ordinal$Q3.8 == 3] <- 2
+stem_ordinal$Q3.8[stem_ordinal$Q3.8 == 4] <- 3
+stem_ordinal$Q3.8[stem_ordinal$Q3.8 == 5] <- 4
+# checking after 
+barplot(table(stem_ordinal$Q3.8)) # good
+
+
+#### Q3.9 ####
+# checking
+barplot(table(stem_ordinal$Q3.9))
+total=sum(table(stem_ordinal$Q3.9))
+levels=sum(table(stem_ordinal$Q3.9)[1])
+levels2=sum(table(stem_ordinal$Q3.9)[5])
+
+cat("Total of levels:", levels, "\n")
+cat("Proportion of levels to total", levels/total, "\n") # factor 1 not 10%, combine 1 & 2. 
+cat("Proportion of levels to total", levels2/total, "\n") # Factor 5 not 10%, combine 4 & 5.
+
+# changing levels
+stem_ordinal$Q3.9[stem_ordinal$Q3.9 == 1 | stem_ordinal$Q3.9 == 2] <- 1
+stem_ordinal$Q3.9[stem_ordinal$Q3.9 == 3] <- 2
+stem_ordinal$Q3.9[stem_ordinal$Q3.9 == 4 | stem_ordinal$Q3.9 == 5] <- 3
+
+# checking after 
+barplot(table(stem_ordinal$Q3.9)) # good
+
+
+#### Q3.10 ####
+# checking
+barplot(table(stem_ordinal$Q3.10))
+total=sum(table(stem_ordinal$Q3.10))
+levels=sum(table(stem_ordinal$Q3.10)[1:3])
+
+cat("Total of levels:", levels, "\n")
+cat("Proportion of levels to total", levels/total, "\n")
+
+# changing levels
+stem_ordinal$Q3.10[stem_ordinal$Q3.10 == 1 | stem_ordinal$Q3.10 == 2 |stem_ordinal$Q3.10 == 3] <- 1
+stem_ordinal$Q3.10[stem_ordinal$Q3.10 == 4] <- 2
+stem_ordinal$Q3.10[stem_ordinal$Q3.10 == 5] <- 3
+
+# checking after 
+barplot(table(stem_ordinal$Q3.10)) # good
+
+
+#### Q3.11 ####
+# checking
+barplot(table(stem_ordinal$Q3.11))
+total=sum(table(stem_ordinal$Q3.11))
+levels=sum(table(stem_ordinal$Q3.11)[4:5])
+
+cat("Total of levels:", levels, "\n")
+cat("Proportion of levels to total", levels/total, "\n") # factors 4 & 5 are 20%, combine.
+
+# changing levels
+stem_ordinal$Q3.11[stem_ordinal$Q3.11 == 4 | stem_ordinal$Q3.11 == 5] <- 4
+
+# checking after 
+barplot(table(stem_ordinal$Q3.11)) # good
+
+
+#### Q3.12 ####
+# checking
+barplot(table(stem_ordinal$Q3.12))
+total=sum(table(stem_ordinal$Q3.12))
+levels=sum(table(stem_ordinal$Q3.12)[5])
+
+cat("Total of levels:", levels, "\n")
+cat("Proportion of levels to total", levels/total, "\n") # smallest factor takes up over 10%, no changes.
+
+# changing levels
+# no changing levels
+
+# checking after
+barplot(table(stem_ordinal$Q3.12)) # good
+```
+### 3.13 - 3.18
+```{r}
+#### Q3.13 ####
+# checking
+barplot(table(stem_ordinal$Q3.13))
+total=sum(table(stem_ordinal$Q3.13))
+levels=sum(table(stem_ordinal$Q3.13)[1])
+levels2=sum(table(stem_ordinal$Q3.13)[5])
+
+cat("Total of levels:", levels, "\n")
+cat("Proportion of levels to total", levels/total, "\n") 
+cat("Proportion of levels to total", levels2/total, "\n") 
+# level5 by itself not over 10%, combine with 4. level 1 by itself not ove 10%, combine with 2.
+
+# changing levels
+stem_ordinal$Q3.13[stem_ordinal$Q3.13 == 1 | stem_ordinal$Q3.13 == 2] <- 1
+stem_ordinal$Q3.13[stem_ordinal$Q3.13 == 3] <- 2
+stem_ordinal$Q3.13[stem_ordinal$Q3.13 == 4 | stem_ordinal$Q3.13 == 5] <- 3
+
+# checking after 
+barplot(table(stem_ordinal$Q3.13))
+
+
+#### Q3.14 ####
+# checking
+barplot(table(stem_ordinal$Q3.14))
+total=sum(table(stem_ordinal$Q3.14))
+levels=sum(table(stem_ordinal$Q3.14)[1])
+levels2=sum(table(stem_ordinal$Q3.14)[5])
+
+cat("Total of levels:", levels, "\n")
+cat("Proportion of levels to total", levels/total, "\n") 
+cat("Proportion of levels to total", levels2/total, "\n") 
+# combine level 1 & 2, since less than 10%
+
+# changing levels
+stem_ordinal$Q3.14[stem_ordinal$Q3.14 == 1 | stem_ordinal$Q3.14 == 2] <- 1
+stem_ordinal$Q3.14[stem_ordinal$Q3.14 == 3] <- 2
+stem_ordinal$Q3.14[stem_ordinal$Q3.14 == 4] <- 3
+stem_ordinal$Q3.14[stem_ordinal$Q3.14 == 5] <- 4
+
+# checking after 
+barplot(table(stem_ordinal$Q3.14))
+
+
+#### Q3.15 ####
+barplot(table(stem_ordinal$Q3.15))
+
+total=sum(table(stem_ordinal$Q3.15))
+levels=sum(table(stem_ordinal$Q3.15)[1:3])
+
+cat("Total of levels:", levels, "\n")
+cat("Proportion of levels to total", levels/total, "\n")
+
+# changing levels
+stem_ordinal$Q3.15[stem_ordinal$Q3.15 == 1 | stem_ordinal$Q3.15 == 2 | stem_ordinal$Q3.15 == 3] <- 1
+stem_ordinal$Q3.15[stem_ordinal$Q3.15 == 4] <- 2
+stem_ordinal$Q3.15[stem_ordinal$Q3.15 == 5] <- 3
+
+# checking after 
+barplot(table(stem_ordinal$Q3.15))
+
+
+#### Q3.16 ####
+# checking
+barplot(table(stem_ordinal$Q3.16))
+total=sum(table(stem_ordinal$Q3.16))
+levels=sum(table(stem_ordinal$Q3.16)[4:5])
+
+cat("Total of levels:", levels, "\n")
+cat("Proportion of levels to total", levels/total, "\n")
+
+# changing levels
+stem_ordinal$Q3.16[stem_ordinal$Q3.16 == 1] <- 1
+stem_ordinal$Q3.16[stem_ordinal$Q3.16 == 2] <- 2
+stem_ordinal$Q3.16[stem_ordinal$Q3.16 == 3] <- 3
+stem_ordinal$Q3.16[stem_ordinal$Q3.16 == 4| stem_ordinal$Q3.16 == 5] <- 4
+# checking after 
+barplot(table(stem_ordinal$Q3.16))
+
+
+#### Q3.17 ####
+# checking
+barplot(table(stem_ordinal$Q3.17))
+total=sum(table(stem_ordinal$Q3.17))
+levels=sum(table(stem_ordinal$Q3.17)[5])
+
+cat("Total of levels:", levels, "\n")
+cat("Proportion of levels to total", levels/total, "\n") # smallest factor, 5, not over 10% on its own so combine with 4.
+
+
+# changing levels
+stem_ordinal$Q3.17[stem_ordinal$Q3.17 == 1] <- 1
+stem_ordinal$Q3.17[stem_ordinal$Q3.17 == 2] <- 2
+stem_ordinal$Q3.17[stem_ordinal$Q3.17 == 3] <- 3
+stem_ordinal$Q3.17[stem_ordinal$Q3.17 == 4| stem_ordinal$Q3.17 == 5] <- 4
+
+# checking after 
+barplot(table(stem_ordinal$Q3.17))
+
+
+#### Q3.18 ####
+# checking
+barplot(table(stem_ordinal$Q3.18))
+total=sum(table(stem_ordinal$Q3.18))
+levels=sum(table(stem_ordinal$Q3.18)[1:2])
+
+cat("Total of levels:", levels, "\n")
+cat("Proportion of levels to total", levels/total, "\n") 
+
+# changing levels
+stem_ordinal$Q3.18[stem_ordinal$Q3.18 == 1| stem_ordinal$Q3.18 == 2] <- 1
+stem_ordinal$Q3.18[stem_ordinal$Q3.18 == 3] <- 2
+stem_ordinal$Q3.18[stem_ordinal$Q3.18 == 4] <- 3
+stem_ordinal$Q3.18[stem_ordinal$Q3.18 == 5] <- 4
+# checking after 
+barplot(table(stem_ordinal$Q3.18))
+```
+
+### 3.19 - 3.24
+
+```{r}
+#### Q3.19 ####
+# checking
+barplot(table(stem_ordinal$Q3.19))
+total=sum(table(stem_ordinal$Q3.19))
+levels=sum(table(stem_ordinal$Q3.19)[1:3])
+
+cat("Total of levels:", levels, "\n")
+cat("Proportion of levels to total", levels/total, "\n") 
+
+# changing levels
+stem_ordinal$Q3.19[stem_ordinal$Q3.19 == 1 | stem_ordinal$Q3.19 == 2 | stem_ordinal$Q3.19 == 3 ] <- 1
+stem_ordinal$Q3.19[stem_ordinal$Q3.19 == 4] <- 2
+stem_ordinal$Q3.19[stem_ordinal$Q3.19 == 5] <- 3
+
+# checking after 
+barplot(table(stem_ordinal$Q3.19))
+
+
+#### Q3.20 ####
+# checking
+barplot(table(stem_ordinal$Q3.20))
+total=sum(table(stem_ordinal$Q3.20))
+levels=sum(table(stem_ordinal$Q3.20)[1:3])
+cat("Total of levels:", levels, "\n")
+cat("Proportion of levels to total", levels/total, "\n") 
+
+# changing levels
+stem_ordinal$Q3.20[stem_ordinal$Q3.20 == 1 | stem_ordinal$Q3.20 == 2 | stem_ordinal$Q3.20 == 3] <- 1
+stem_ordinal$Q3.20[stem_ordinal$Q3.20 == 4] <- 2
+stem_ordinal$Q3.20[stem_ordinal$Q3.20 == 5] <- 3
+
+# checking after 
+barplot(table(stem_ordinal$Q3.20))
+
+
+
+#### Q3.21 ####
+# checking
+barplot(table(stem_ordinal$Q3.21))
+total=sum(table(stem_ordinal$Q3.21))
+levels=sum(table(stem_ordinal$Q3.21)[1:3]) 
+cat("Total of levels:", levels, "\n")
+cat("Proportion of levels to total", levels/total, "\n") 
+# after combining 3 levels, still under 10% of total, so we combine 4.
+
+# changing levels
+stem_ordinal$Q3.21[stem_ordinal$Q3.21 == 1 | stem_ordinal$Q3.21 == 2 | stem_ordinal$Q3.21 == 3 |  stem_ordinal$Q3.21 == 4] <- 1
+stem_ordinal$Q3.21[stem_ordinal$Q3.21 == 5] <- 2
+
+# checking after 
+barplot(table(stem_ordinal$Q3.21))
+
+
+#### Q3.22 ####
+# checking
+barplot(table(stem_ordinal$Q3.22))
+total=sum(table(stem_ordinal$Q3.22))
+levels=sum(table(stem_ordinal$Q3.22)[1:3]) 
+cat("Total of levels:", levels, "\n")
+cat("Proportion of levels to total", levels/total, "\n") 
+
+# changing levels
+stem_ordinal$Q3.22[stem_ordinal$Q3.22 == 1 | stem_ordinal$Q3.22 == 2 | stem_ordinal$Q3.22 == 3] <- 1
+stem_ordinal$Q3.22[stem_ordinal$Q3.22 == 4] <- 2
+stem_ordinal$Q3.22[stem_ordinal$Q3.22 == 5] <- 3
+
+# checking after 
+barplot(table(stem_ordinal$Q3.22))
+
+
+#### Q3.23 ####
+# checking
+barplot(table(stem_ordinal$Q3.23))
+total=sum(table(stem_ordinal$Q3.23))
+levels=sum(table(stem_ordinal$Q3.23)[1:3]) 
+cat("Total of levels:", levels, "\n")
+cat("Proportion of levels to total", levels/total, "\n") 
+
+# changing levels
+stem_ordinal$Q3.23[stem_ordinal$Q3.23 == 1 | stem_ordinal$Q3.23 == 2 | stem_ordinal$Q3.23 == 3] <- 1
+stem_ordinal$Q3.23[stem_ordinal$Q3.23 == 4] <- 2
+stem_ordinal$Q3.23[stem_ordinal$Q3.23 == 5] <- 3
+
+# checking after 
+barplot(table(stem_ordinal$Q3.23))
+
+
+#### Q3.24 ####
+# checking
+barplot(table(stem_ordinal$Q3.24))
+total=sum(table(stem_ordinal$Q3.24))
+levels=sum(table(stem_ordinal$Q3.24)[1:3]) 
+cat("Total of levels:", levels, "\n")
+cat("Proportion of levels to total", levels/total, "\n") 
+
+# changing levels
+stem_ordinal$Q3.24[stem_ordinal$Q3.24 == 1 | stem_ordinal$Q3.24 == 2 | stem_ordinal$Q3.24 == 3] <- 1
+stem_ordinal$Q3.24[stem_ordinal$Q3.24 == 4] <- 2
+stem_ordinal$Q3.24[stem_ordinal$Q3.24 == 5] <- 3
+
+# checking after 
+barplot(table(stem_ordinal$Q3.24))
+```
+
+```{r}
+# note: the new file has 821 rows instead of the original 866, because we removed NA's for pooling.
+stem2 = stem
+stem2_filtered = stem2[rownames(stem2) %in% rownames(stem_ordinal),]
+stem2_filtered[24:47] = stem_ordinal
+
+pooled_stem = stem2_filtered
+```
+
+# Factor Analysis
 ```{r}
 library(psych)
 library(GPArotation)
 library(psychTools)
+stem = pooled_stem
 ```
 
 ```{r}
@@ -28,7 +506,6 @@ parallel$fa.values
 # eigenvalues over 1 = 2 factors
 # eigenvalues over 0.7 = 3 factors
 ```
-### Factor Analysis
 ```{r}
 # only consider the loadings more than 0.3 and not loading on more than one factor (called double loading). Note that negative values are acceptable here. 
 
